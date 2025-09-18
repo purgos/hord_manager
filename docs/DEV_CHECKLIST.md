@@ -22,9 +22,13 @@
 
 ## Web Scraping
 
-- [ ] Scrape metal prices from <https://www.dailymetalprice.com/metalpricescurr.php>
-- [ ] Parse and store prices for: Aluminum, Cobalt, Copper, Gold, Lead, Molybdenum, Neodymium, Nickel, Palladium, Platinum, Silver, Tin, Uranium, Zinc
-- [ ] Schedule regular scraping (on session increment or interval)
+- [ ] Identify target website and data to extract (e.g., <https://www.dailymetalprice.com/metalpricescurr.php>)
+- [ ] Send HTTP request to fetch HTML content
+- [ ] Parse HTML content to locate relevant data (e.g., using BeautifulSoup)
+- [ ] Extract and process metal prices for: Aluminum, Cobalt, Copper, Gold, Lead, Lithium , Molybdenum, Neodymium, Nickel, Palladium, Platinum, Silver, Tin, Uranium, Zinc
+- [ ] Handle pagination or dynamic content if necessary
+- [ ] Store extracted data in the database
+- [ ] Schedule or trigger scraping (on session increment or at regular intervals)
 
 ## Currency & Value Conversion
 

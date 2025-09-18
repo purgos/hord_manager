@@ -9,6 +9,7 @@ SUPPORTED_METALS = {
     "Copper": "lb",
     "Gold": "oz",
     "Lead": "lb",
+    "Lithium": "kg",
     "Molybdenum": "lb",
     "Neodymium": "oz",
     "Nickel": "lb",
