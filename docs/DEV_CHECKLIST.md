@@ -64,6 +64,7 @@
 
 - [ ] Add/edit currencies and denominations
 - [ ] Set currency values
+- [ ] Toggle visibility of dollar currency to players
 - [ ] Set exchange fee, interest rate, growth factor
 - [ ] Set loan terms (interest, length, down payment, payment calc)
 - [ ] Add/edit gemstones and values
