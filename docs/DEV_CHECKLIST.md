@@ -11,12 +11,14 @@
 
 ## Data Models
 
-- [x] Player model (initial: player + business)
-- [x] GM model (settings + inbox stub; session counter handled by GlobalState)
+- [x] Player model
+- [x] GM model (settings, inbox)
 - [x] Currency model (name, denominations, value in oz gold)
-- [x] Metal model (price history model added)
-- [x] Gemstone model (name, value per carat, inventory + player holdings endpoint)
-- [~] Art/Real Estate/Business models *(Art, Real Estate, Business models + basic endpoints; advanced features pending)*
+- [x] Metal model (price history)
+- [x] Gemstone model (name, value per carat, player holdings)
+- [x] Art model (name, description, appraisal)
+- [x] Real Estate model (name, location, appraisal, income)
+- [x] Business model (ownership, investors, net worth)
 
 ## Web Scraping
 
