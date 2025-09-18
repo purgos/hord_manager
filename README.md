@@ -114,8 +114,39 @@ Run tests:
 
 ```bash
 pip install -r requirements-dev.txt
-pytest
+python -m pytest
 ```
+
+### Database Migrations (Alembic)
+
+Alembic is used for database schema migrations.
+
+Initial apply (fresh dev environment):
+
+```bash
+alembic upgrade head
+```
+
+If you already have a local `app.db` created before migrations were added and want to align without recreating:
+
+```bash
+alembic stamp head
+```
+
+Generating a new migration after model changes:
+
+```bash
+alembic revision --autogenerate -m "describe change"
+alembic upgrade head
+```
+
+Files:
+- `alembic.ini` root config
+- `migrations/env.py` environment setup pulling in SQLAlchemy `Base`
+- `migrations/versions/` individual revision scripts
+
+If you see ModuleNotFoundError for `backend`, ensure you invoke pytest as a module (`python -m pytest`) so the
+`[tool.pytest.ini_options] pythonpath` setting in `pyproject.toml` is respected. Alternatively, set `PYTHONPATH=backend/app`.
 
 ## Project Structure (Partial)
 

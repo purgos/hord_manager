@@ -15,8 +15,8 @@
 - [x] GM model (settings + inbox stub; session counter handled by GlobalState)
 - [x] Currency model (name, denominations, value in oz gold)
 - [x] Metal model (price history model added)
-- [ ] Gemstone model (name, value per carat, inventory)
-- [ ] Art/Real Estate/Business models
+- [x] Gemstone model (name, value per carat, inventory + player holdings endpoint)
+- [~] Art/Real Estate/Business models *(Art, Real Estate, Business models + basic endpoints; advanced features pending)*
 
 ## Web Scraping
 
