@@ -1,0 +1,10 @@
+{
+  "python.analysis.extraPaths": [
+    "./backend",
+    "./backend/app"
+  ],
+  "python.analysis.typeCheckingMode": "basic",
+  "python.languageServer": "Pylance",
+"python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+"python-envs.pythonProjects": []
+}

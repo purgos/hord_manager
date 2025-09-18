@@ -1,12 +1,13 @@
-
 # Hord Manager
 
-Treasure Management, Currency Conversion, and Banking for TTRPGs
+Treasure Management, Currency Conversion, and Banking for TTRPGs.
 
 ## Overview
+
 Hord Manager is a local web application for hosting and managing tabletop RPG (TTRPG) games. It provides tools for tracking player wealth, banking, currency and precious metal conversion, and business management, all accessible via a web server on your local network. The app is designed for both players and GMs, with password-protected GM controls.
 
 ## Key Features
+
 - Player wealth tracking (metals, gemstones, art, real estate, businesses)
 - Currency and precious metal value conversion (oz gold as base unit)
 - Web scraping of real-world metal prices for up-to-date values
@@ -19,6 +20,7 @@ Hord Manager is a local web application for hosting and managing tabletop RPG (T
 - Cross-platform packaging (.app for Linux, .exe for Windows)
 
 ## Development Checklist (Summary)
+
 - Backend web server and API
 - Frontend framework and UI
 - User authentication and session management
@@ -34,7 +36,84 @@ Hord Manager is a local web application for hosting and managing tabletop RPG (T
 See `docs/DEV_CHECKLIST.md` for the full development checklist and progress tracking.
 
 ## Getting Started
-*Instructions for setup, running locally, and contributing will be added as development progresses.*
+
+Backend quick start (development) using backend-local venv:
+
+1. Create virtual environment (optional but recommended)
+2. Install dependencies from `backend/requirements.txt`
+3. Run the API with uvicorn
+
+Example commands:
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+Or use the backend helper script (recreates venv only for backend/):
+
+```bash
+cd backend
+chmod +x scripts/setup_env.sh
+./scripts/setup_env.sh
+uvicorn app.main:app --reload
+```
+
+Root-level unified virtual environment (preferred as project grows):
+
+```bash
+chmod +x setup_env.sh
+./setup_env.sh
+source .venv/bin/activate
+uvicorn backend.app.main:app --reload
+```
+
+Then visit: <http://127.0.0.1:8000> and API docs at <http://127.0.0.1:8000/docs>.
+
+Note: Frontend implementation pending.
+
+## Tooling & Quality
+
+Ruff lint:
+
+```bash
+source .venv/bin/activate
+ruff check .
+```
+
+Type check (mypy):
+
+```bash
+mypy .
+```
+
+Run tests:
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+## Project Structure (Partial)
+
+```text
+backend/
+  app/
+    core/        # config & db
+    models/      # ORM models
+    routers/     # API endpoints
+    services/    # scraping & domain services
+docs/
+tests/           # pytest suite
+pyproject.toml   # tooling config
+requirements.txt # backend deps
+```
 
 ---
+
+---
+
 **Project under active development.**

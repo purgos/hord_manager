@@ -1,33 +1,38 @@
 # Hord Manager Development Checklist
 
 ## Core Architecture
-- [ ] Set up backend web server (Python/FastAPI or Node.js/Express)
+
+- [x] Set up backend web server (FastAPI skeleton running)
 - [ ] Set up frontend framework (React, Vue, or Svelte)
 - [ ] Implement user authentication (password-protected GM screen)
-- [ ] Implement session management (track sessions globally)
-- [ ] Set up database (SQLite, PostgreSQL, or file-based for local use)
-- [ ] Implement API for frontend-backend communication
+- [x] Implement session management (track sessions globally) *(basic global session counter)*
+- [x] Set up database (SQLite via SQLAlchemy)
+- [x] Implement API for frontend-backend communication *(health, sessions, currencies CRUD initial)*
 
 ## Data Models
-- [ ] Player model (wealth, horde, bank, loans, businesses, net worth)
+
+- [x] Player model (initial: player + business)
 - [ ] GM model (settings, inbox, session counter)
-- [ ] Currency model (name, denominations, value in oz gold)
-- [ ] Metal model (name, value per oz/lb, inventory)
+- [x] Currency model (name, denominations, value in oz gold)
+- [x] Metal model (price history model added)
 - [ ] Gemstone model (name, value per carat, inventory)
 - [ ] Art/Real Estate/Business models
 
 ## Web Scraping
-- [ ] Scrape metal prices from https://www.dailymetalprice.com/metalpricescurr.php
+
+- [ ] Scrape metal prices from <https://www.dailymetalprice.com/metalpricescurr.php>
 - [ ] Parse and store prices for: Aluminum, Cobalt, Copper, Gold, Lead, Molybdenum, Neodymium, Nickel, Palladium, Platinum, Silver, Tin, Uranium, Zinc
 - [ ] Schedule regular scraping (on session increment or interval)
 
 ## Currency & Value Conversion
+
 - [ ] Implement value conversion logic (oz gold as base unit)
 - [ ] Support for dollar and custom currencies
 - [ ] Support for precious metals (lb/oz) and gemstones (carats)
 - [ ] Display denominations for each currency
 
 ## Player Pages
+
 - [ ] Treasure Horde
   - [ ] Art category (add, appraise, request appraisal)
   - [ ] Gemstone category (add, display value per carat, total value)
@@ -49,12 +54,14 @@
   - [ ] Line graph (net worth over sessions)
 
 ## Currency Page
+
 - [ ] List all currencies and denominations
 - [ ] Graph price of each currency over sessions (relative to oz gold)
 - [ ] List all metals and prices
 - [ ] Graph price of each metal over sessions (relative to oz gold)
 
 ## GM Screen (Password Protected)
+
 - [ ] Add/edit currencies and denominations
 - [ ] Set currency values
 - [ ] Set exchange fee, interest rate, growth factor
@@ -71,25 +78,29 @@
   - [ ] Loan petitions (approve/disapprove, set terms)
 
 ## Packaging & Deployment
+
 - [ ] Package as .app image for Linux
 - [ ] Package as .exe for Windows
 - [ ] Ensure local network accessibility
 - [ ] Test cross-platform compatibility
 
 ## Testing & QA
-- [ ] Unit tests for backend logic
+
+- [x] Unit tests for backend logic (health endpoint)
 - [ ] Integration tests for API
 - [ ] UI/UX testing
 - [ ] Data persistence and reset tests
 
 ## Documentation
+
 - [ ] User guide
 - [ ] GM guide
-- [ ] Developer setup guide
+- [x] Developer setup guide (README environment & tooling)
 
 ---
 
 **Legend:**
+
 - [ ] Not started
 - [x] Complete
 
