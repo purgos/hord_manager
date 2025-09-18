@@ -12,7 +12,7 @@
 ## Data Models
 
 - [x] Player model (initial: player + business)
-- [ ] GM model (settings, inbox, session counter)
+- [x] GM model (settings + inbox stub; session counter handled by GlobalState)
 - [x] Currency model (name, denominations, value in oz gold)
 - [x] Metal model (price history model added)
 - [ ] Gemstone model (name, value per carat, inventory)
@@ -64,7 +64,7 @@
 
 - [ ] Add/edit currencies and denominations
 - [ ] Set currency values
-- [ ] Toggle visibility of dollar currency to players
+- [x] Toggle visibility of dollar currency to players *(settings flag + endpoint; player filtering still pending)*
 - [ ] Set exchange fee, interest rate, growth factor
 - [ ] Set loan terms (interest, length, down payment, payment calc)
 - [ ] Add/edit gemstones and values

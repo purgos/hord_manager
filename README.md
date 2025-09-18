@@ -75,6 +75,26 @@ Then visit: <http://127.0.0.1:8000> and API docs at <http://127.0.0.1:8000/docs>
 
 Note: Frontend implementation pending.
 
+### New Convenience Runner
+
+Instead of remembering the uvicorn invocation you can use the helper script added at the project root:
+
+```bash
+python run_api.py
+```
+
+Environment variables:
+
+```bash
+HOST=0.0.0.0 PORT=9001 RELOAD=0 python run_api.py
+```
+
+Defaults: HOST=127.0.0.1, PORT=8000, RELOAD=1.
+
+This loads the app via its package path (`backend.app.main:app`) so relative imports work, avoiding the "attempted relative import with no known parent package" error you get if you run `backend/app/main.py` directly.
+
+Planned: a Makefile target (`make dev`) or VS Code task pointing to this script.
+
 ## Tooling & Quality
 
 Ruff lint:
