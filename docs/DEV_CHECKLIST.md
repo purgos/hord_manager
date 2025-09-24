@@ -3,7 +3,7 @@
 ## Core Architecture
 
 - [x] Set up backend web server (FastAPI skeleton running)
-- [ ] Set up frontend framework (React, Vue, or Svelte)
+- [x] Set up frontend framework (React, Vue, or Svelte) *(React with Vite, Material-UI, React Router)*
 - [ ] Implement user authentication (password-protected GM screen)
 - [x] Implement session management (track sessions globally) *(basic global session counter)*
 - [x] Set up database (SQLite via SQLAlchemy)
@@ -22,13 +22,13 @@
 
 ## Web Scraping
 
-- [ ] Identify target website and data to extract (e.g., <https://www.dailymetalprice.com/metalpricescurr.php>)
-- [ ] Send HTTP request to fetch HTML content
-- [ ] Parse HTML content to locate relevant data (e.g., using BeautifulSoup)
-- [ ] Extract and process metal prices for: Aluminum, Cobalt, Copper, Gold, Lead, Lithium , Molybdenum, Neodymium, Nickel, Palladium, Platinum, Silver, Tin, Uranium, Zinc
-- [ ] Handle pagination or dynamic content if necessary
-- [ ] Store extracted data in the database
-- [ ] Schedule or trigger scraping (on session increment or at regular intervals)
+- [x] Identify target website and data to extract (e.g., <https://www.dailymetalprice.com/metalpricescurr.php>)
+- [x] Send HTTP request to fetch HTML content
+- [x] Parse HTML content to locate relevant data (e.g., using BeautifulSoup)
+- [x] Extract and process metal prices for: Aluminum, Cobalt, Copper, Gold, Lead, Lithium , Molybdenum, Neodymium, Nickel, Palladium, Platinum, Silver, Tin, Uranium, Zinc
+- [x] Handle pagination or dynamic content if necessary *(fallback to mock data when live scraping fails)*
+- [x] Store extracted data in the database *(with session tracking and gold price conversion)*
+- [x] Schedule or trigger scraping (on session increment or at regular intervals) *(automatic on session increment + manual API endpoint)*
 
 ## Currency & Value Conversion
 

@@ -1,10 +1,11 @@
 from fastapi import FastAPI, APIRouter
 from .core.database import engine, Base
 from .utils.migrations import ensure_migrations, get_migration_status
-from .routers import health, sessions, currencies, gm, gemstones, art, real_estate, businesses
+from .routers import health, sessions, currencies, gm, gemstones, art, real_estate, businesses, metals
 from .models import gemstone as _gemstone_models  # noqa: F401 ensure table registration
 from .models import art as _art_models  # noqa: F401 ensure table registration
 from .models import business as _business_models  # noqa: F401 ensure table registration
+from .models import metal as _metal_models  # noqa: F401 ensure table registration
 
 # Alembic manages schema; create_all removed.
 
@@ -35,6 +36,7 @@ app.include_router(gemstones.router)
 app.include_router(art.router)
 app.include_router(real_estate.router)
 app.include_router(businesses.router)
+app.include_router(metals.router)
 app.include_router(migration_router)
 
 @app.get("/")
