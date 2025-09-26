@@ -1,5 +1,7 @@
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 from ..core.database import get_db
 from ..models.currency import Currency, CurrencyDenomination
 from ..schemas.common import (
@@ -10,6 +12,27 @@ from ..schemas.common import (
     CurrencyUpdate,
     CurrencyDenominationUpdate,
 )
+from ..services.conversion import get_conversion_service
+
+
+# Additional Pydantic models for conversion endpoints
+class ConversionRequest(BaseModel):
+    amount: float
+    from_currency: str
+    to_currency: str
+
+
+class ConversionResponse(BaseModel):
+    amount: float
+    from_currency: str
+    to_currency: str
+    converted_amount: float
+    oz_gold_equivalent: float
+
+
+class ValueDisplayRequest(BaseModel):
+    oz_gold_value: float
+    target_currencies: Optional[List[str]] = None
 
 router = APIRouter(prefix="/currencies", tags=["currencies"]) 
 
@@ -140,3 +163,232 @@ def patch_currency(currency_id: int, payload: CurrencyUpdate, db: Session = Depe
             for den in currency.denominations
         ],
     )
+
+
+# === CONVERSION ENDPOINTS ===
+
+@router.post("/convert", response_model=ConversionResponse)
+async def convert_currency(
+    request: ConversionRequest, 
+    db: Session = Depends(get_db)
+):
+    """Convert between two currencies."""
+    conversion_service = get_conversion_service(db)
+    
+    try:
+        converted_amount = conversion_service.convert_between_currencies(
+            request.amount, request.from_currency, request.to_currency
+        )
+        
+        # Also get gold equivalent
+        oz_gold_equivalent = conversion_service.currency_to_oz_gold(
+            request.amount, request.from_currency
+        )
+        
+        return ConversionResponse(
+            amount=request.amount,
+            from_currency=request.from_currency,
+            to_currency=request.to_currency,
+            converted_amount=converted_amount,
+            oz_gold_equivalent=oz_gold_equivalent
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/convert/from-gold")
+async def convert_from_gold(
+    oz_gold: float,
+    currency: str,
+    db: Session = Depends(get_db)
+):
+    """Convert ounces of gold to specified currency."""
+    conversion_service = get_conversion_service(db)
+    
+    try:
+        amount = conversion_service.oz_gold_to_currency(oz_gold, currency)
+        breakdown = conversion_service.format_currency_with_denominations(amount, currency)
+        
+        return {
+            "oz_gold": oz_gold,
+            "currency": currency,
+            "amount": amount,
+            "breakdown": breakdown
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/convert/to-gold")
+async def convert_to_gold(
+    amount: float,
+    currency: str,
+    db: Session = Depends(get_db)
+):
+    """Convert currency amount to ounces of gold."""
+    conversion_service = get_conversion_service(db)
+    
+    try:
+        oz_gold = conversion_service.currency_to_oz_gold(amount, currency)
+        
+        return {
+            "amount": amount,
+            "currency": currency,
+            "oz_gold": oz_gold
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/convert/usd")
+async def convert_usd(
+    amount: float,
+    to_currency: Optional[str] = None,
+    from_currency: Optional[str] = None,
+    session_number: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    """Convert to/from USD using current gold prices."""
+    conversion_service = get_conversion_service(db)
+    
+    try:
+        if to_currency:
+            # Convert USD to target currency
+            oz_gold = conversion_service.usd_to_oz_gold(amount, session_number)
+            converted_amount = conversion_service.oz_gold_to_currency(oz_gold, to_currency)
+            
+            return {
+                "amount": amount,
+                "from_currency": "USD",
+                "to_currency": to_currency,
+                "converted_amount": converted_amount,
+                "oz_gold_equivalent": oz_gold
+            }
+        elif from_currency:
+            # Convert from currency to USD
+            oz_gold = conversion_service.currency_to_oz_gold(amount, from_currency)
+            usd_amount = conversion_service.oz_gold_to_usd(oz_gold, session_number)
+            
+            return {
+                "amount": amount,
+                "from_currency": from_currency,
+                "to_currency": "USD",
+                "converted_amount": usd_amount,
+                "oz_gold_equivalent": oz_gold
+            }
+        else:
+            raise HTTPException(status_code=400, detail="Must specify either to_currency or from_currency")
+            
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/rates/{base_currency}")
+async def get_conversion_rates(
+    base_currency: str = "USD",
+    db: Session = Depends(get_db)
+):
+    """Get conversion rates for all currencies relative to base currency."""
+    conversion_service = get_conversion_service(db)
+    
+    try:
+        rates = conversion_service.get_conversion_rates(base_currency)
+        return rates
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/display")
+async def display_value_in_currencies(
+    request: ValueDisplayRequest,
+    db: Session = Depends(get_db)
+):
+    """Display a gold value in multiple currencies with denominations."""
+    conversion_service = get_conversion_service(db)
+    
+    try:
+        display = conversion_service.convert_value_display(
+            request.oz_gold_value, 
+            request.target_currencies
+        )
+        return display
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/breakdown/{currency_name}")
+async def get_currency_breakdown(
+    currency_name: str,
+    amount: float,
+    db: Session = Depends(get_db)
+):
+    """Get denomination breakdown for a currency amount."""
+    conversion_service = get_conversion_service(db)
+    
+    try:
+        breakdown = conversion_service.format_currency_with_denominations(amount, currency_name)
+        return breakdown
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/metals/value")
+async def get_metal_value(
+    metal_name: str,
+    amount: float,
+    unit: str,
+    session_number: Optional[int] = None,
+    target_currencies: Optional[List[str]] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """Get value of metal amount in various currencies."""
+    conversion_service = get_conversion_service(db)
+    
+    try:
+        oz_gold_value = conversion_service.metal_value_to_oz_gold(
+            metal_name, amount, unit, session_number
+        )
+        
+        display = conversion_service.convert_value_display(
+            oz_gold_value, 
+            target_currencies
+        )
+        
+        return {
+            "metal_name": metal_name,
+            "amount": amount,
+            "unit": unit,
+            "session_number": session_number,
+            "oz_gold_value": oz_gold_value,
+            "conversions": display["conversions"]
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/gemstones/value")
+async def get_gemstone_value(
+    gemstone_name: str,
+    carats: float,
+    target_currencies: Optional[List[str]] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """Get value of gemstone carats in various currencies."""
+    conversion_service = get_conversion_service(db)
+    
+    try:
+        oz_gold_value = conversion_service.gemstone_value_to_oz_gold(gemstone_name, carats)
+        
+        display = conversion_service.convert_value_display(
+            oz_gold_value, 
+            target_currencies
+        )
+        
+        return {
+            "gemstone_name": gemstone_name,
+            "carats": carats,
+            "oz_gold_value": oz_gold_value,
+            "conversions": display["conversions"]
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

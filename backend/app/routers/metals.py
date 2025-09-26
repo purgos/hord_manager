@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from ..core.database import get_db
 from ..models.metal import MetalPriceHistory
-from ..services.scraper import scrape_and_store_metal_prices, scrape_metal_prices
+from ..services.scraper import scrape_and_store_metal_prices, scrape_metal_prices, scrape_gemstone_prices
 
 router = APIRouter(prefix="/metals", tags=["metals"])
 
@@ -102,4 +102,37 @@ def get_supported_metals():
             for metal_name, config in SUPPORTED_METALS.items()
         ],
         "count": len(SUPPORTED_METALS)
+    }
+
+@router.get("/gemstones/prices/current")
+def get_current_gemstone_prices(
+    use_mock_data: bool = Query(False, description="Use mock data (parameter kept for compatibility)"),
+):
+    """Get current gemstone prices."""
+    try:
+        prices = scrape_gemstone_prices(use_mock_data=use_mock_data)
+        return {
+            "prices": prices,
+            "count": len(prices),
+            "use_mock_data": False  # Always random generation
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get gemstone prices: {str(e)}")
+
+@router.get("/gemstones/supported")
+def get_supported_gemstones():
+    """Get list of supported gemstones and their price ranges."""
+    from ..services.scraper import SUPPORTED_GEMSTONES
+    
+    return {
+        "gemstones": [
+            {
+                "name": gemstone_name,
+                "unit": config["unit"],
+                "min_price_range": config["min_price"],
+                "max_price_range": config["max_price"]
+            }
+            for gemstone_name, config in SUPPORTED_GEMSTONES.items()
+        ],
+        "count": len(SUPPORTED_GEMSTONES)
     }

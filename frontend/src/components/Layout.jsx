@@ -25,12 +25,12 @@ const theme = createTheme({
   },
 });
 
-const Layout = ({ children, sessionNumber }) => {
+const Layout = ({ children, sessionNumber, user }) => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <Header sessionNumber={sessionNumber} />
+        <Header sessionNumber={sessionNumber} user={user} />
         <Container maxWidth="lg" sx={{ flex: 1, py: 3 }}>
           {children}
         </Container>

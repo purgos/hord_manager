@@ -1,0 +1,191 @@
+nohup: ignoring input
+INFO:     Will watch for changes in these directories: ['/home/purgos/Code/hord_manager']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [97306] using StatReload
+INFO:     Started server process [97314]
+INFO:     Waiting for application startup.
+2025-09-26 16:47:52,475 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:47:52,475 INFO sqlalchemy.engine.Engine SELECT version_num FROM alembic_version
+2025-09-26 16:47:52,475 INFO sqlalchemy.engine.Engine [generated in 0.00015s] ()
+2025-09-26 16:47:52,475 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     Application startup complete.
+2025-09-26 16:48:08,328 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:48:08,330 INFO sqlalchemy.engine.Engine SELECT currencies.id AS currencies_id, currencies.name AS currencies_name, currencies.base_unit_value_oz_gold AS currencies_base_unit_value_oz_gold, currencies.created_at AS currencies_created_at, currencies.updated_at AS currencies_updated_at 
+FROM currencies
+2025-09-26 16:48:08,330 INFO sqlalchemy.engine.Engine [generated in 0.00009s] ()
+2025-09-26 16:48:08,330 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:46864 - "GET /currencies/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56284 - "GET /metals/gemstones/prices/current HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54174 - "GET /health/ping HTTP/1.1" 200 OK
+2025-09-26 16:48:36,742 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:48:36,743 INFO sqlalchemy.engine.Engine SELECT global_state.id AS global_state_id, global_state.current_session AS global_state_current_session, global_state.created_at AS global_state_created_at, global_state.updated_at AS global_state_updated_at 
+FROM global_state
+ LIMIT ? OFFSET ?
+2025-09-26 16:48:36,743 INFO sqlalchemy.engine.Engine [generated in 0.00014s] (1, 0)
+INFO:     127.0.0.1:54188 - "GET /health/ping HTTP/1.1" 200 OK
+2025-09-26 16:48:36,745 INFO sqlalchemy.engine.Engine INSERT INTO global_state (current_session) VALUES (?) RETURNING id, created_at, updated_at
+2025-09-26 16:48:36,745 INFO sqlalchemy.engine.Engine [generated in 0.00012s] (0,)
+2025-09-26 16:48:36,746 INFO sqlalchemy.engine.Engine COMMIT
+2025-09-26 16:48:36,753 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:48:36,753 INFO sqlalchemy.engine.Engine SELECT global_state.id, global_state.current_session, global_state.created_at, global_state.updated_at 
+FROM global_state 
+WHERE global_state.id = ?
+2025-09-26 16:48:36,753 INFO sqlalchemy.engine.Engine [generated in 0.00007s] (1,)
+2025-09-26 16:48:36,754 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:54180 - "GET /sessions/state HTTP/1.1" 200 OK
+2025-09-26 16:48:36,755 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:48:36,755 INFO sqlalchemy.engine.Engine SELECT global_state.id AS global_state_id, global_state.current_session AS global_state_current_session, global_state.created_at AS global_state_created_at, global_state.updated_at AS global_state_updated_at 
+FROM global_state
+ LIMIT ? OFFSET ?
+2025-09-26 16:48:36,755 INFO sqlalchemy.engine.Engine [cached since 0.01165s ago] (1, 0)
+2025-09-26 16:48:36,755 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:54188 - "GET /sessions/state HTTP/1.1" 200 OK
+2025-09-26 16:48:36,756 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:48:36,756 INFO sqlalchemy.engine.Engine SELECT global_state.id AS global_state_id, global_state.current_session AS global_state_current_session, global_state.created_at AS global_state_created_at, global_state.updated_at AS global_state_updated_at 
+FROM global_state
+ LIMIT ? OFFSET ?
+2025-09-26 16:48:36,756 INFO sqlalchemy.engine.Engine [cached since 0.01291s ago] (1, 0)
+2025-09-26 16:48:36,756 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:54180 - "GET /sessions/state HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54188 - "GET /metals/prices/current?use_mock_data=true HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54180 - "GET /metals/prices/current?use_mock_data=true HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54188 - "GET /metals/prices/current?use_mock_data=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54174 - "GET /metals/gemstones/prices/current?use_mock_data=false HTTP/1.1" 200 OK
+2025-09-26 16:48:40,742 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:48:40,742 INFO sqlalchemy.engine.Engine SELECT currencies.id AS currencies_id, currencies.name AS currencies_name, currencies.base_unit_value_oz_gold AS currencies_base_unit_value_oz_gold, currencies.created_at AS currencies_created_at, currencies.updated_at AS currencies_updated_at 
+FROM currencies
+2025-09-26 16:48:40,742 INFO sqlalchemy.engine.Engine [cached since 32.41s ago] ()
+INFO:     127.0.0.1:54200 - "GET /metals/prices/current?use_mock_data=false HTTP/1.1" 200 OK
+2025-09-26 16:48:40,743 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:54188 - "GET /metals/gemstones/prices/current?use_mock_data=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54180 - "GET /currencies/ HTTP/1.1" 200 OK
+2025-09-26 16:48:40,745 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:48:40,745 INFO sqlalchemy.engine.Engine SELECT currencies.id AS currencies_id, currencies.name AS currencies_name, currencies.base_unit_value_oz_gold AS currencies_base_unit_value_oz_gold, currencies.created_at AS currencies_created_at, currencies.updated_at AS currencies_updated_at 
+FROM currencies
+2025-09-26 16:48:40,745 INFO sqlalchemy.engine.Engine [cached since 32.42s ago] ()
+2025-09-26 16:48:40,745 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:54200 - "GET /currencies/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54200 - "GET /health/ping HTTP/1.1" 200 OK
+2025-09-26 16:48:41,969 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+INFO:     127.0.0.1:54180 - "GET /health/ping HTTP/1.1" 200 OK
+2025-09-26 16:48:41,970 INFO sqlalchemy.engine.Engine SELECT global_state.id AS global_state_id, global_state.current_session AS global_state_current_session, global_state.created_at AS global_state_created_at, global_state.updated_at AS global_state_updated_at 
+FROM global_state
+ LIMIT ? OFFSET ?
+2025-09-26 16:48:41,970 INFO sqlalchemy.engine.Engine [cached since 5.227s ago] (1, 0)
+2025-09-26 16:48:41,971 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:54188 - "GET /sessions/state HTTP/1.1" 200 OK
+2025-09-26 16:48:41,972 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:48:41,972 INFO sqlalchemy.engine.Engine SELECT global_state.id AS global_state_id, global_state.current_session AS global_state_current_session, global_state.created_at AS global_state_created_at, global_state.updated_at AS global_state_updated_at 
+FROM global_state
+ LIMIT ? OFFSET ?
+2025-09-26 16:48:41,972 INFO sqlalchemy.engine.Engine [cached since 5.229s ago] (1, 0)
+2025-09-26 16:48:41,973 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:54180 - "GET /sessions/state HTTP/1.1" 200 OK
+2025-09-26 16:48:41,974 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:48:41,975 INFO sqlalchemy.engine.Engine SELECT global_state.id AS global_state_id, global_state.current_session AS global_state_current_session, global_state.created_at AS global_state_created_at, global_state.updated_at AS global_state_updated_at 
+FROM global_state
+ LIMIT ? OFFSET ?
+2025-09-26 16:48:41,975 INFO sqlalchemy.engine.Engine [cached since 5.231s ago] (1, 0)
+2025-09-26 16:48:41,975 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:54188 - "GET /sessions/state HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54180 - "GET /metals/prices/current?use_mock_data=true HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54188 - "GET /metals/prices/current?use_mock_data=true HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54188 - "GET /metals/prices/current?use_mock_data=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54200 - "GET /metals/gemstones/prices/current?use_mock_data=false HTTP/1.1" 200 OK
+2025-09-26 16:48:44,563 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:48:44,563 INFO sqlalchemy.engine.Engine SELECT currencies.id AS currencies_id, currencies.name AS currencies_name, currencies.base_unit_value_oz_gold AS currencies_base_unit_value_oz_gold, currencies.created_at AS currencies_created_at, currencies.updated_at AS currencies_updated_at 
+FROM currencies
+INFO:     127.0.0.1:54188 - "GET /metals/gemstones/prices/current?use_mock_data=false HTTP/1.1" 200 OK
+2025-09-26 16:48:44,564 INFO sqlalchemy.engine.Engine [cached since 36.23s ago] ()
+INFO:     127.0.0.1:54174 - "GET /metals/prices/current?use_mock_data=false HTTP/1.1" 200 OK
+2025-09-26 16:48:44,565 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:54180 - "GET /currencies/ HTTP/1.1" 200 OK
+2025-09-26 16:48:44,567 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:48:44,567 INFO sqlalchemy.engine.Engine SELECT currencies.id AS currencies_id, currencies.name AS currencies_name, currencies.base_unit_value_oz_gold AS currencies_base_unit_value_oz_gold, currencies.created_at AS currencies_created_at, currencies.updated_at AS currencies_updated_at 
+FROM currencies
+2025-09-26 16:48:44,567 INFO sqlalchemy.engine.Engine [cached since 36.24s ago] ()
+2025-09-26 16:48:44,567 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:54174 - "GET /currencies/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57196 - "GET /health/ping HTTP/1.1" 200 OK
+2025-09-26 16:52:19,693 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:52:19,693 INFO sqlalchemy.engine.Engine SELECT global_state.id AS global_state_id, global_state.current_session AS global_state_current_session, global_state.created_at AS global_state_created_at, global_state.updated_at AS global_state_updated_at 
+FROM global_state
+ LIMIT ? OFFSET ?
+2025-09-26 16:52:19,693 INFO sqlalchemy.engine.Engine [cached since 223s ago] (1, 0)
+INFO:     127.0.0.1:57210 - "GET /health/ping HTTP/1.1" 200 OK
+2025-09-26 16:52:19,694 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:57198 - "GET /sessions/state HTTP/1.1" 200 OK
+2025-09-26 16:52:19,696 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:52:19,696 INFO sqlalchemy.engine.Engine SELECT global_state.id AS global_state_id, global_state.current_session AS global_state_current_session, global_state.created_at AS global_state_created_at, global_state.updated_at AS global_state_updated_at 
+FROM global_state
+ LIMIT ? OFFSET ?
+2025-09-26 16:52:19,696 INFO sqlalchemy.engine.Engine [cached since 223s ago] (1, 0)
+2025-09-26 16:52:19,697 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:57198 - "GET /sessions/state HTTP/1.1" 200 OK
+2025-09-26 16:52:19,698 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:52:19,698 INFO sqlalchemy.engine.Engine SELECT global_state.id AS global_state_id, global_state.current_session AS global_state_current_session, global_state.created_at AS global_state_created_at, global_state.updated_at AS global_state_updated_at 
+FROM global_state
+ LIMIT ? OFFSET ?
+2025-09-26 16:52:19,698 INFO sqlalchemy.engine.Engine [cached since 223s ago] (1, 0)
+2025-09-26 16:52:19,698 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:57210 - "GET /sessions/state HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57198 - "GET /metals/prices/current?use_mock_data=true HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57210 - "GET /metals/prices/current?use_mock_data=true HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57210 - "GET /metals/prices/current?use_mock_data=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57196 - "GET /metals/gemstones/prices/current?use_mock_data=false HTTP/1.1" 200 OK
+2025-09-26 16:52:23,601 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:52:23,601 INFO sqlalchemy.engine.Engine SELECT currencies.id AS currencies_id, currencies.name AS currencies_name, currencies.base_unit_value_oz_gold AS currencies_base_unit_value_oz_gold, currencies.created_at AS currencies_created_at, currencies.updated_at AS currencies_updated_at 
+FROM currencies
+2025-09-26 16:52:23,602 INFO sqlalchemy.engine.Engine [cached since 255.3s ago] ()
+INFO:     127.0.0.1:43248 - "GET /metals/prices/current?use_mock_data=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57210 - "GET /metals/gemstones/prices/current?use_mock_data=false HTTP/1.1" 200 OK
+2025-09-26 16:52:23,603 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:57198 - "GET /currencies/ HTTP/1.1" 200 OK
+2025-09-26 16:52:23,605 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:52:23,605 INFO sqlalchemy.engine.Engine SELECT currencies.id AS currencies_id, currencies.name AS currencies_name, currencies.base_unit_value_oz_gold AS currencies_base_unit_value_oz_gold, currencies.created_at AS currencies_created_at, currencies.updated_at AS currencies_updated_at 
+FROM currencies
+2025-09-26 16:52:23,605 INFO sqlalchemy.engine.Engine [cached since 255.3s ago] ()
+2025-09-26 16:52:23,605 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:43248 - "GET /currencies/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34100 - "GET /metals/prices/current?use_mock_data=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34122 - "GET /metals/gemstones/prices/current?use_mock_data=false HTTP/1.1" 200 OK
+2025-09-26 16:52:39,054 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:52:39,055 INFO sqlalchemy.engine.Engine SELECT currencies.id AS currencies_id, currencies.name AS currencies_name, currencies.base_unit_value_oz_gold AS currencies_base_unit_value_oz_gold, currencies.created_at AS currencies_created_at, currencies.updated_at AS currencies_updated_at 
+FROM currencies
+2025-09-26 16:52:39,055 INFO sqlalchemy.engine.Engine [cached since 270.7s ago] ()
+2025-09-26 16:52:39,055 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:52:39,055 INFO sqlalchemy.engine.Engine SELECT global_state.id AS global_state_id, global_state.current_session AS global_state_current_session, global_state.created_at AS global_state_created_at, global_state.updated_at AS global_state_updated_at 
+FROM global_state
+ LIMIT ? OFFSET ?
+2025-09-26 16:52:39,056 INFO sqlalchemy.engine.Engine [cached since 242.3s ago] (1, 0)
+INFO:     127.0.0.1:34146 - "GET /metals/prices/current?use_mock_data=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34100 - "GET /metals/gemstones/prices/current?use_mock_data=false HTTP/1.1" 200 OK
+2025-09-26 16:52:39,057 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:34106 - "GET /currencies/ HTTP/1.1" 200 OK
+2025-09-26 16:52:39,058 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:34138 - "GET /sessions/state HTTP/1.1" 200 OK
+2025-09-26 16:52:39,059 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:52:39,059 INFO sqlalchemy.engine.Engine SELECT currencies.id AS currencies_id, currencies.name AS currencies_name, currencies.base_unit_value_oz_gold AS currencies_base_unit_value_oz_gold, currencies.created_at AS currencies_created_at, currencies.updated_at AS currencies_updated_at 
+FROM currencies
+2025-09-26 16:52:39,059 INFO sqlalchemy.engine.Engine [cached since 270.7s ago] ()
+2025-09-26 16:52:39,059 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:34146 - "GET /currencies/ HTTP/1.1" 200 OK
+2025-09-26 16:52:39,060 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:52:39,060 INFO sqlalchemy.engine.Engine SELECT global_state.id AS global_state_id, global_state.current_session AS global_state_current_session, global_state.created_at AS global_state_created_at, global_state.updated_at AS global_state_updated_at 
+FROM global_state
+ LIMIT ? OFFSET ?
+2025-09-26 16:52:39,060 INFO sqlalchemy.engine.Engine [cached since 242.3s ago] (1, 0)
+2025-09-26 16:52:39,061 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:34106 - "GET /sessions/state HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'migrations/versions/0001_initial.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [97314]
+INFO:     Started server process [98735]
+INFO:     Waiting for application startup.
+2025-09-26 16:52:39,857 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-09-26 16:52:39,857 INFO sqlalchemy.engine.Engine SELECT version_num FROM alembic_version
+2025-09-26 16:52:39,857 INFO sqlalchemy.engine.Engine [generated in 0.00014s] ()
+2025-09-26 16:52:39,858 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     Application startup complete.

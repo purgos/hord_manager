@@ -38,11 +38,15 @@ const HomePage = () => {
 
       // Fetch recent metal prices
       const metals = await metalService.getCurrentPrices(true);
-      setMetalPrices(metals.prices.slice(0, 6)); // Show first 6 metals
+      setMetalPrices((metals && metals.prices) ? metals.prices.slice(0, 6) : []); // Show first 6 metals
 
     } catch (err) {
       setError(err);
       console.error('Failed to fetch dashboard data:', err);
+      // Set fallback data to prevent crashes
+      setHealthStatus({ status: 'error' });
+      setSessionData({ current_session: 1 });
+      setMetalPrices([]);
     } finally {
       setLoading(false);
     }

@@ -8,6 +8,8 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  Chip,
+  Avatar,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -17,13 +19,19 @@ import {
   Gavel,
   Home,
   Settings,
+  AccountCircle,
+  Shield,
+  Logout,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
-const Header = ({ sessionNumber, onNavigate }) => {
+const Header = ({ sessionNumber, user, onNavigate }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout, isGM } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const [userMenuAnchor, setUserMenuAnchor] = React.useState(null);
 
   const handleMenuClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -31,6 +39,20 @@ const Header = ({ sessionNumber, onNavigate }) => {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleUserMenuClick = (event) => {
+    setUserMenuAnchor(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setUserMenuAnchor(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    handleUserMenuClose();
+    navigate('/login');
   };
 
   const handleNavigation = (path) => {
@@ -63,7 +85,7 @@ const Header = ({ sessionNumber, onNavigate }) => {
         </IconButton>
         
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          Hord Manager
+          🏰 Hord Manager
         </Typography>
 
         {sessionNumber && (
@@ -71,6 +93,30 @@ const Header = ({ sessionNumber, onNavigate }) => {
             <Typography variant="body2">
               Session: {sessionNumber}
             </Typography>
+          </Box>
+        )}
+
+        {/* User Info and Menu */}
+        {user && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Chip
+              icon={isGM() ? <Shield /> : <AccountCircle />}
+              label={`${user.username} (${isGM() ? 'GM' : 'Player'})`}
+              color={isGM() ? 'secondary' : 'primary'}
+              variant="outlined"
+              onClick={handleUserMenuClick}
+              sx={{ color: 'white', borderColor: 'white' }}
+            />
+            <Menu
+              anchorEl={userMenuAnchor}
+              open={Boolean(userMenuAnchor)}
+              onClose={handleUserMenuClose}
+            >
+              <MenuItem onClick={handleLogout}>
+                <Logout sx={{ mr: 1 }} />
+                Logout
+              </MenuItem>
+            </Menu>
           </Box>
         )}
 

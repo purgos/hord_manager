@@ -39,6 +39,8 @@ def upgrade():
         sa.Column('id', sa.Integer(), primary_key=True),
         sa.Column('name', sa.String(), index=True),
         sa.Column('base_unit_value_oz_gold', sa.Float(), default=0.0),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now()),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), onupdate=sa.func.now()),
     )
     op.create_table('currency_denominations',
         sa.Column('id', sa.Integer(), primary_key=True),
@@ -111,9 +113,15 @@ def upgrade():
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now()),
         sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), onupdate=sa.func.now()),
     )
+    op.create_table('global_state',
+        sa.Column('id', sa.Integer(), primary_key=True),
+        sa.Column('current_session', sa.Integer(), default=0),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now()),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), onupdate=sa.func.now()),
+    )
 
 def downgrade():
     for table in [
-        'business_investors','businesses','real_estate_properties','art_items','metal_price_history','inbox_messages',
+        'global_state','business_investors','businesses','real_estate_properties','art_items','metal_price_history','inbox_messages',
         'gm_settings','currency_denominations','currencies','player_gemstones','gemstones','players']:
         op.drop_table(table)

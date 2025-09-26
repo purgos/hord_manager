@@ -17,23 +17,81 @@ export const sessionService = {
   },
 };
 
-// Currency service
+// Currency Service
 export const currencyService = {
-  getAll: async () => {
-    return await api.get('/currencies');
+  async getAllCurrencies() {
+    return await api.get('/currencies/');
   },
-  getById: async (id) => {
-    return await api.get(`/currencies/${id}`);
+
+  async getCurrency(name) {
+    return await api.get(`/currencies/${name}`);
   },
-  create: async (currency) => {
-    return await api.post('/currencies', currency);
+
+  async convertCurrency(amount, fromCurrency, toCurrency) {
+    return await api.post('/currencies/convert', {
+      amount,
+      from_currency: fromCurrency,
+      to_currency: toCurrency
+    });
   },
-  update: async (id, currency) => {
-    return await api.put(`/currencies/${id}`, currency);
+
+  async convertFromGold(ozGold, currency) {
+    return await api.post(`/currencies/convert/from-gold?oz_gold=${ozGold}&currency=${currency}`);
   },
-  delete: async (id) => {
-    return await api.delete(`/currencies/${id}`);
+
+  async convertToGold(amount, currency) {
+    return await api.post(`/currencies/convert/to-gold?amount=${amount}&currency=${currency}`);
   },
+
+  async convertUSD(amount, toCurrency = null, fromCurrency = null, sessionNumber = null) {
+    const params = new URLSearchParams({ amount: amount.toString() });
+    if (toCurrency) params.append('to_currency', toCurrency);
+    if (fromCurrency) params.append('from_currency', fromCurrency);
+    if (sessionNumber) params.append('session_number', sessionNumber.toString());
+    
+    return await api.post(`/currencies/convert/usd?${params}`);
+  },
+
+  async getConversionRates(baseCurrency = 'USD') {
+    return await api.get(`/currencies/rates/${baseCurrency}`);
+  },
+
+  async displayValueInCurrencies(ozGoldValue, targetCurrencies = null) {
+    return await api.post('/currencies/display', {
+      oz_gold_value: ozGoldValue,
+      target_currencies: targetCurrencies
+    });
+  },
+
+  async getCurrencyBreakdown(currencyName, amount) {
+    return await api.get(`/currencies/breakdown/${currencyName}?amount=${amount}`);
+  },
+
+  async getMetalValue(metalName, amount, unit, sessionNumber = null, targetCurrencies = null) {
+    const params = new URLSearchParams({
+      metal_name: metalName,
+      amount: amount.toString(),
+      unit
+    });
+    if (sessionNumber) params.append('session_number', sessionNumber.toString());
+    if (targetCurrencies) {
+      targetCurrencies.forEach(currency => params.append('target_currencies', currency));
+    }
+    
+    return await api.get(`/currencies/metals/value?${params}`);
+  },
+
+  async getGemstoneValue(gemstoneName, carats, targetCurrencies = null) {
+    const params = new URLSearchParams({
+      gemstone_name: gemstoneName,
+      carats: carats.toString()
+    });
+    if (targetCurrencies) {
+      targetCurrencies.forEach(currency => params.append('target_currencies', currency));
+    }
+    
+    return await api.get(`/currencies/gemstones/value?${params}`);
+  }
 };
 
 // Metal prices service
@@ -88,6 +146,15 @@ export const gemstoneService = {
   },
   delete: async (id) => {
     return await api.delete(`/gemstones/${id}`);
+  },
+  // Pricing methods
+  getSupportedGemstones: async () => {
+    return await api.get('/metals/gemstones/supported');
+  },
+  getCurrentPrices: async (useMockData = false) => {
+    return await api.get('/metals/gemstones/prices/current', {
+      params: { use_mock_data: useMockData }
+    });
   },
 };
 

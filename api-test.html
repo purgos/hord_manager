@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>API Test</h1>
+    <button onclick="testAPI()">Test Currency API</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            try {
+                resultDiv.innerHTML = 'Testing...';
+                
+                const response = await fetch('http://localhost:8000/currencies/');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <h3>Success!</h3>
+                    <p>Found ${data.length} currencies</p>
+                    <pre>${JSON.stringify(data.slice(0, 2), null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>Error:</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

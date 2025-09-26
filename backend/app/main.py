@@ -1,4 +1,5 @@
 from fastapi import FastAPI, APIRouter
+from fastapi.middleware.cors import CORSMiddleware
 from .core.database import engine, Base
 from .utils.migrations import ensure_migrations, get_migration_status
 from .routers import health, sessions, currencies, gm, gemstones, art, real_estate, businesses, metals
@@ -11,6 +12,15 @@ from .models import metal as _metal_models  # noqa: F401 ensure table registrati
 
 
 app = FastAPI(title="Hord Manager API")
+
+# Add CORS middleware to allow frontend access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],  # React dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 _migration_status_cache = {}
 
