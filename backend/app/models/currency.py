@@ -1,13 +1,24 @@
-from sqlalchemy import Integer, String, Float, ForeignKey, DateTime, func
+from sqlalchemy import Integer, String, Float, ForeignKey, DateTime, func, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ..core.database import Base
+import enum
+
+class PegType(enum.Enum):
+    CURRENCY = "currency"
+    METAL = "metal"
+    MATERIAL = "material"
 
 class Currency(Base):
     __tablename__ = "currencies"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, unique=True, index=True)
-    base_unit_value_oz_gold: Mapped[float] = mapped_column(Float, default=0.0)
+    
+    # Flexible pegging system
+    peg_type: Mapped[PegType] = mapped_column(Enum(PegType), default=PegType.CURRENCY)
+    peg_target: Mapped[str] = mapped_column(String, default="USD")  # name of currency/metal/material
+    base_unit_value: Mapped[float] = mapped_column(Float, default=1.0)  # value in terms of peg_target
+    
     created_at: Mapped[str] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[str] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

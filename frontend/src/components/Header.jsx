@@ -22,6 +22,10 @@ import {
   AccountCircle,
   Shield,
   Logout,
+  AttachMoney,
+  Inbox,
+  DeleteForever,
+  Build,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -61,14 +65,23 @@ const Header = ({ sessionNumber, user, onNavigate }) => {
     if (onNavigate) onNavigate(path);
   };
 
-  const menuItems = [
+  const menuItems = isGM() ? [
+  // GM-only navigation menu
+  { label: 'Home', path: '/', icon: <Home /> },
+  { label: 'Settings', path: '/gm/settings', icon: <Settings /> },
+  { label: 'Currencies', path: '/gm/currencies', icon: <AttachMoney /> },
+  { label: 'Materials', path: '/gm/materials', icon: <Build /> },
+  { label: 'Inbox', path: '/gm/inbox', icon: <Inbox /> },
+  { label: 'Gemstones', path: '/gm/gemstones', icon: <Diamond /> },
+  { label: 'Data', path: '/gm/data', icon: <DeleteForever /> },
+  ] : [
+    // Player navigation menu
     { label: 'Home', path: '/', icon: <Home /> },
     { label: 'Treasure Horde', path: '/treasure', icon: <Diamond /> },
     { label: 'Banking', path: '/banking', icon: <AccountBalance /> },
     { label: 'Business', path: '/business', icon: <Business /> },
     { label: 'Net Worth', path: '/net-worth', icon: <Gavel /> },
-    { label: 'Currencies', path: '/currencies', icon: <AccountBalance /> },
-    { label: 'GM Screen', path: '/gm', icon: <Settings /> },
+    { label: 'Currencies', path: '/currencies', icon: <AttachMoney /> },
   ];
 
   return (

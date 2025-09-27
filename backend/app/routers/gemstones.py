@@ -44,6 +44,33 @@ def list_gemstones(db: Session = Depends(get_db)):
     return db.query(Gemstone).order_by(Gemstone.name.asc()).all()
 
 
+@router.put("/{gemstone_id}", response_model=GemstoneRead)
+def update_gemstone(gemstone_id: int, payload: GemstoneCreate, db: Session = Depends(get_db)):
+    """Update an existing gemstone."""
+    gemstone = db.query(Gemstone).filter(Gemstone.id == gemstone_id).first()
+    if not gemstone:
+        raise HTTPException(status_code=404, detail="Gemstone not found")
+    
+    gemstone.name = payload.name
+    gemstone.value_per_carat_oz_gold = payload.value_per_carat_oz_gold
+    db.add(gemstone)
+    db.commit()
+    db.refresh(gemstone)
+    return gemstone
+
+
+@router.delete("/{gemstone_id}")
+def delete_gemstone(gemstone_id: int, db: Session = Depends(get_db)):
+    """Delete a gemstone."""
+    gemstone = db.query(Gemstone).filter(Gemstone.id == gemstone_id).first()
+    if not gemstone:
+        raise HTTPException(status_code=404, detail="Gemstone not found")
+    
+    db.delete(gemstone)
+    db.commit()
+    return {"message": f"Gemstone '{gemstone.name}' deleted successfully"}
+
+
 @router.post("/players/{player_id}", response_model=PlayerGemstoneRead)
 def add_player_gemstone(player_id: int, payload: PlayerGemstoneCreate, db: Session = Depends(get_db)):
     # Ensure gemstone exists

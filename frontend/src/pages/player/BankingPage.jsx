@@ -1,7 +1,7 @@
 import React from 'react';
 import { Typography, Box, Paper, Grid, Button } from '@mui/material';
 import { AccountBalance, TrendingUp, Receipt } from '@mui/icons-material';
-import { PageHeader } from '../components/Common';
+import { PageHeader } from '../../components/Common';
 
 const BankingPage = () => {
   return (

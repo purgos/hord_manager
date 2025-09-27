@@ -14,12 +14,13 @@ import {
   TableCell,
   Chip
 } from '@mui/material';
-import { metalService, currencyService, gemstoneService } from '../services';
+import { metalService, currencyService, gemstoneService, materialService, sessionService } from '../../services';
 
 function CurrenciesPage() {
   const [pricesHistory, setPricesHistory] = useState([]);
   const [currencies, setCurrencies] = useState([]);
   const [gemstones, setGemstones] = useState([]);
+  const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -34,19 +35,26 @@ function CurrenciesPage() {
       setLoading(true);
       setError('');
       
-      const [metalResponse, currencyResponse, gemstoneResponse] = await Promise.all([
-        metalService.getCurrentPrices(),
+      // Get current session first
+      const session = await sessionService.getState();
+      const currentSession = session.current_session;
+      
+      const [metalResponse, currencyResponse, gemstoneResponse, materialResponse] = await Promise.all([
+        metalService.getCurrentPrices(true, currentSession),
         currencyService.getAllCurrencies(),
-        gemstoneService.getCurrentPrices()
+        gemstoneService.getCurrentPrices(),
+        materialService.getCurrentPrices(currentSession, true)
       ]);
       
       console.log('Metal API response:', metalResponse);
       console.log('Currency API response:', currencyResponse);
       console.log('Gemstone API response:', gemstoneResponse);
+      console.log('Material API response:', materialResponse);
       
       const pricesData = metalResponse.prices || [];
       const currencyData = currencyResponse || [];
       const gemstoneData = gemstoneResponse.prices || [];
+      const materialData = materialResponse.prices || [];
       
       console.log('Prices data:', pricesData);
       console.log('Currency data:', currencyData);
@@ -69,12 +77,21 @@ function CurrenciesPage() {
         price_usd: gemstone.price_per_unit_usd,
         price_gold: gemstone.price_per_unit_usd / goldPrice
       }));
+
+      const transformedMaterials = materialData.map(material => ({
+        name: material.material_name,
+        unit: material.unit,
+        price_usd: material.price_per_unit_usd,
+        price_gold: material.price_per_oz_gold
+      }));
       
       console.log('Transformed data:', transformedData);
       console.log('Transformed gemstones:', transformedGemstones);
+      console.log('Transformed materials:', transformedMaterials);
       setPricesHistory(transformedData);
       setCurrencies(currencyData);
       setGemstones(transformedGemstones);
+      setMaterials(transformedMaterials);
     } catch (err) {
       console.error('Error loading data:', err);
       setError(err.message || 'Failed to load data');
@@ -83,7 +100,7 @@ function CurrenciesPage() {
     }
   };
 
-  console.log('Render - loading:', loading, 'error:', error, 'pricesHistory.length:', pricesHistory.length, 'currencies.length:', currencies.length, 'gemstones.length:', gemstones.length);
+  console.log('Render - loading:', loading, 'error:', error, 'pricesHistory.length:', pricesHistory.length, 'currencies.length:', currencies.length, 'gemstones.length:', gemstones.length, 'materials.length:', materials.length);
 
   if (loading) {
     console.log('Rendering loading state');
@@ -107,7 +124,7 @@ function CurrenciesPage() {
         <Alert severity="error">
           {error}
         </Alert>
-        <Typography>Debug info: pricesHistory={pricesHistory.length}, currencies={currencies.length}, gemstones={gemstones.length}</Typography>
+        <Typography>Debug info: pricesHistory={pricesHistory.length}, currencies={currencies.length}, gemstones={gemstones.length}, materials={materials.length}</Typography>
       </Box>
     );
   }
@@ -117,7 +134,7 @@ function CurrenciesPage() {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        Currencies & Metals
+        Currencies, Metals & Materials
       </Typography>
       
       {error && (
@@ -272,6 +289,58 @@ function CurrenciesPage() {
                           <TableCell align="right">
                             <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'gold' }}>
                               {gemstone.price_gold.toFixed(6)} oz gold
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Material Prices Section */}
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Material Prices in Gold Equivalent ({materials.length} materials)
+              </Typography>
+              
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Material</TableCell>
+                      <TableCell>Unit</TableCell>
+                      <TableCell align="right">Gold Equivalent</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {materials.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={3} align="center">
+                          <Typography variant="body2" color="text.secondary">
+                            No material price data available
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      materials.map((material, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            <Chip 
+                              label={material.name} 
+                              size="small" 
+                              color="info"
+                            />
+                          </TableCell>
+                          <TableCell>{material.unit}</TableCell>
+                          <TableCell align="right">
+                            <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'gold' }}>
+                              {material.price_gold.toFixed(6)} oz gold
                             </Typography>
                           </TableCell>
                         </TableRow>

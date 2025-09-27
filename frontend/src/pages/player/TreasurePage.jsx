@@ -1,7 +1,7 @@
 import React from 'react';
 import { Typography, Box, Paper, Grid, Button } from '@mui/material';
 import { Diamond, Palette, HomeWork } from '@mui/icons-material';
-import { PageHeader } from '../components/Common';
+import { PageHeader } from '../../components/Common';
 
 const TreasurePage = () => {
   return (

@@ -2,14 +2,14 @@
 Currency and value conversion service for Hord Manager.
 
 This service handles all conversions between different currencies and units,
-using ounces of gold as the base unit for all value calculations.
+using USD as the base unit for all value calculations with flexible pegging.
 """
 
 from typing import Dict, List, Tuple, Optional
 from sqlalchemy.orm import Session
 from decimal import Decimal, ROUND_HALF_UP
 
-from ..models.currency import Currency, CurrencyDenomination
+from ..models.currency import Currency, CurrencyDenomination, PegType
 from ..models.metal import MetalPriceHistory
 from ..models.gemstone import Gemstone
 from ..core.database import get_db
@@ -53,32 +53,89 @@ class ConversionService:
         gold_price = self.get_gold_price_usd(session_number)
         return usd_amount / gold_price
     
-    def oz_gold_to_currency(self, oz_gold: float, currency_name: str) -> float:
-        """Convert ounces of gold to specified currency base units."""
+    def currency_to_usd(self, amount: float, currency_name: str, session_number: Optional[int] = None) -> float:
+        """Convert currency to USD using the flexible pegging system."""
+        if currency_name == "USD":
+            return amount
+            
         currency = self.db.query(Currency).filter(Currency.name == currency_name).first()
         
         if not currency:
             raise ValueError(f"Currency '{currency_name}' not found")
         
-        if currency.base_unit_value_oz_gold == 0:
+        if currency.base_unit_value == 0:
             raise ValueError(f"Currency '{currency_name}' has no conversion rate set")
         
-        return oz_gold / currency.base_unit_value_oz_gold
+        if currency.peg_type == PegType.CURRENCY:
+            if currency.peg_target == "USD":
+                return amount * currency.base_unit_value
+            else:
+                # Convert through the peg target currency
+                target_usd = self.currency_to_usd(currency.base_unit_value, currency.peg_target, session_number)
+                return amount * target_usd
+        elif currency.peg_type == PegType.METAL:
+            # Convert through metal pricing (e.g., gold)
+            if currency.peg_target.lower() == "gold":
+                gold_price_usd = self.get_gold_price_usd(session_number)
+                oz_gold_value = amount * currency.base_unit_value
+                return oz_gold_value * gold_price_usd
+            else:
+                raise ValueError(f"Metal peg to '{currency.peg_target}' not yet supported")
+        elif currency.peg_type == PegType.MATERIAL:
+            raise ValueError(f"Material pegging not yet supported")
+        else:
+            raise ValueError(f"Unknown peg type: {currency.peg_type}")
     
-    def currency_to_oz_gold(self, amount: float, currency_name: str) -> float:
-        """Convert currency base units to ounces of gold."""
+    def usd_to_currency(self, usd_amount: float, currency_name: str, session_number: Optional[int] = None) -> float:
+        """Convert USD to specified currency using the flexible pegging system."""
+        if currency_name == "USD":
+            return usd_amount
+            
         currency = self.db.query(Currency).filter(Currency.name == currency_name).first()
         
         if not currency:
             raise ValueError(f"Currency '{currency_name}' not found")
         
-        return amount * currency.base_unit_value_oz_gold
+        if currency.base_unit_value == 0:
+            raise ValueError(f"Currency '{currency_name}' has no conversion rate set")
+        
+        if currency.peg_type == PegType.CURRENCY:
+            if currency.peg_target == "USD":
+                return usd_amount / currency.base_unit_value
+            else:
+                # Convert through the peg target currency
+                target_amount = self.usd_to_currency(usd_amount, currency.peg_target, session_number)
+                return target_amount / currency.base_unit_value
+        elif currency.peg_type == PegType.METAL:
+            # Convert through metal pricing (e.g., gold)
+            if currency.peg_target.lower() == "gold":
+                gold_price_usd = self.get_gold_price_usd(session_number)
+                oz_gold_value = usd_amount / gold_price_usd
+                return oz_gold_value / currency.base_unit_value
+            else:
+                raise ValueError(f"Metal peg to '{currency.peg_target}' not yet supported")
+        elif currency.peg_type == PegType.MATERIAL:
+            raise ValueError(f"Material pegging not yet supported")
+        else:
+            raise ValueError(f"Unknown peg type: {currency.peg_type}")
     
-    def convert_between_currencies(self, amount: float, from_currency: str, to_currency: str) -> float:
-        """Convert between two currencies via gold."""
-        # Convert to gold first, then to target currency
-        oz_gold = self.currency_to_oz_gold(amount, from_currency)
-        return self.oz_gold_to_currency(oz_gold, to_currency)
+    def oz_gold_to_currency(self, oz_gold: float, currency_name: str, session_number: Optional[int] = None) -> float:
+        """Convert ounces of gold to specified currency base units."""
+        # Convert gold to USD first, then to target currency
+        usd_amount = self.oz_gold_to_usd(oz_gold, session_number)
+        return self.usd_to_currency(usd_amount, currency_name, session_number)
+    
+    def currency_to_oz_gold(self, amount: float, currency_name: str, session_number: Optional[int] = None) -> float:
+        """Convert currency base units to ounces of gold."""
+        # Convert currency to USD first, then to gold
+        usd_amount = self.currency_to_usd(amount, currency_name, session_number)
+        return self.usd_to_oz_gold(usd_amount, session_number)
+    
+    def convert_between_currencies(self, amount: float, from_currency: str, to_currency: str, session_number: Optional[int] = None) -> float:
+        """Convert between two currencies via USD."""
+        # Convert to USD first, then to target currency
+        usd_amount = self.currency_to_usd(amount, from_currency, session_number)
+        return self.usd_to_currency(usd_amount, to_currency, session_number)
     
     def metal_value_to_oz_gold(self, metal_name: str, amount: float, unit: str, 
                               session_number: Optional[int] = None) -> float:
@@ -185,36 +242,42 @@ class ConversionService:
             "formatted": formatted
         }
     
-    def get_conversion_rates(self, base_currency: str = "USD") -> Dict:
+    def get_conversion_rates(self, base_currency: str = "USD", session_number: Optional[int] = None) -> Dict:
         """Get conversion rates for all currencies relative to base currency."""
         currencies = self.db.query(Currency).all()
         rates = {}
         
         try:
-            # Get base currency value in gold
-            if base_currency == "USD":
-                base_oz_gold_rate = 1 / self.get_gold_price_usd()
-            else:
-                base_currency_obj = next((c for c in currencies if c.name == base_currency), None)
-                if not base_currency_obj:
-                    raise ValueError(f"Base currency '{base_currency}' not found")
-                base_oz_gold_rate = base_currency_obj.base_unit_value_oz_gold
-            
             for currency in currencies:
-                if currency.base_unit_value_oz_gold > 0:
-                    # Rate = how many units of this currency = 1 unit of base currency
-                    rates[currency.name] = base_oz_gold_rate / currency.base_unit_value_oz_gold
+                if currency.base_unit_value > 0:
+                    try:
+                        # Rate = how many units of this currency = 1 unit of base currency
+                        if base_currency == "USD":
+                            rates[currency.name] = 1.0 / self.currency_to_usd(1.0, currency.name, session_number)
+                        else:
+                            # Convert 1 unit of base currency to USD, then to target currency
+                            base_usd = self.currency_to_usd(1.0, base_currency, session_number)
+                            rates[currency.name] = self.usd_to_currency(base_usd, currency.name, session_number)
+                    except (ValueError, Exception):
+                        rates[currency.name] = 0.0
                 else:
                     rates[currency.name] = 0.0
             
             # Add USD if not already included
-            if base_currency != "USD":
-                usd_in_gold = 1 / self.get_gold_price_usd()
-                rates["USD"] = base_oz_gold_rate / usd_in_gold
+            if "USD" not in rates:
+                if base_currency == "USD":
+                    rates["USD"] = 1.0
+                else:
+                    try:
+                        base_usd = self.currency_to_usd(1.0, base_currency, session_number)
+                        rates["USD"] = 1.0 / base_usd
+                    except (ValueError, Exception):
+                        rates["USD"] = 0.0
             
         except Exception as e:
             # Return empty rates on error
             rates = {currency.name: 0.0 for currency in currencies}
+            rates["USD"] = 1.0 if base_currency == "USD" else 0.0
         
         return {
             "base_currency": base_currency,
@@ -222,8 +285,8 @@ class ConversionService:
             "last_updated": "current_session"  # Could be enhanced with timestamps
         }
     
-    def convert_value_display(self, oz_gold_value: float, target_currencies: Optional[List[str]] = None) -> Dict:
-        """Convert a gold value to multiple currency displays."""
+    def convert_value_display(self, usd_value: float, target_currencies: Optional[List[str]] = None, session_number: Optional[int] = None) -> Dict:
+        """Convert a USD value to multiple currency displays."""
         if target_currencies is None:
             # Default to USD and all configured currencies
             currencies = self.db.query(Currency).all()
@@ -234,14 +297,13 @@ class ConversionService:
         for currency_name in target_currencies:
             try:
                 if currency_name == "USD":
-                    amount = self.oz_gold_to_usd(oz_gold_value)
                     conversions[currency_name] = {
-                        "amount": amount,
-                        "formatted": f"${amount:,.2f}",
+                        "amount": usd_value,
+                        "formatted": f"${usd_value:,.2f}",
                         "breakdown": None
                     }
                 else:
-                    amount = self.oz_gold_to_currency(oz_gold_value, currency_name)
+                    amount = self.usd_to_currency(usd_value, currency_name, session_number)
                     breakdown = self.format_currency_with_denominations(amount, currency_name)
                     conversions[currency_name] = {
                         "amount": amount,
@@ -253,9 +315,16 @@ class ConversionService:
                 continue
         
         return {
-            "oz_gold_value": oz_gold_value,
+            "usd_value": usd_value,
             "conversions": conversions
         }
+    
+    def convert_gold_value_display(self, oz_gold_value: float, target_currencies: Optional[List[str]] = None, session_number: Optional[int] = None) -> Dict:
+        """Convert a gold value to multiple currency displays (legacy method for backward compatibility)."""
+        usd_value = self.oz_gold_to_usd(oz_gold_value, session_number)
+        result = self.convert_value_display(usd_value, target_currencies, session_number)
+        result["oz_gold_value"] = oz_gold_value  # Add gold value for compatibility
+        return result
 
 
 def get_conversion_service(db: Session) -> ConversionService:

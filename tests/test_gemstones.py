@@ -1,26 +1,18 @@
 from fastapi.testclient import TestClient
-from backend.app.main import app
-from backend.app.core.database import SessionLocal
 from backend.app.models.player import Player
 
-client = TestClient(app)
+
+def ensure_player(db_session, name="Tester"):
+    player = db_session.query(Player).filter(Player.name == name).first()
+    if not player:
+        player = Player(name=name)
+        db_session.add(player)
+        db_session.commit()
+        db_session.refresh(player)
+    return player
 
 
-def ensure_player(name="Tester"):
-    db = SessionLocal()
-    try:
-        p = db.query(Player).filter(Player.name == name).first()
-        if not p:
-            p = Player(name=name)
-            db.add(p)
-            db.commit()
-            db.refresh(p)
-        return p
-    finally:
-        db.close()
-
-
-def test_create_and_list_gemstones():
+def test_create_and_list_gemstones(client: TestClient):
     payload = {"name": "Ruby", "value_per_carat_oz_gold": 0.5}
     resp = client.post("/gemstones/", json=payload)
     if resp.status_code == 400:  # Already exists from previous test run
@@ -35,10 +27,8 @@ def test_create_and_list_gemstones():
     assert resp2.status_code == 200
     names = [g["name"] for g in resp2.json()]
     assert payload["name"] in names
-
-
-def test_add_player_gemstone():
-    player = ensure_player()
+def test_add_player_gemstone(client: TestClient, db_session):
+    player = ensure_player(db_session)
     # Ensure gemstone exists
     client.post("/gemstones/", json={"name": "Emerald", "value_per_carat_oz_gold": 0.75})
     gems = client.get("/gemstones/").json()
@@ -57,9 +47,7 @@ def test_add_player_gemstone():
     assert list_resp.status_code == 200
     holdings = list_resp.json()
     assert any(h["gemstone_id"] == emerald["id"] for h in holdings)
-
-
-def test_duplicate_without_upsert_then_with_upsert():
+def test_duplicate_without_upsert_then_with_upsert(client: TestClient):
     # Create once
     first = client.post("/gemstones/", json={"name": "Sapphire", "value_per_carat_oz_gold": 1.0})
     if first.status_code not in (200, 400):

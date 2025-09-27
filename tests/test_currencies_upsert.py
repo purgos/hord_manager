@@ -1,10 +1,7 @@
 from fastapi.testclient import TestClient
-from backend.app.main import app
-
-client = TestClient(app)
 
 
-def test_currency_duplicate_then_upsert():
+def test_currency_duplicate_then_upsert(client: TestClient):
     payload = {
         "name": "Dollar",
         "base_unit_value_oz_gold": 0.02,

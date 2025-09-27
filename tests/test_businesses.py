@@ -1,26 +1,18 @@
 from fastapi.testclient import TestClient
-from backend.app.main import app
-from backend.app.core.database import SessionLocal
 from backend.app.models.player import Player
 
-client = TestClient(app)
+
+def ensure_player(db_session, name="BizTester"):
+    player = db_session.query(Player).filter(Player.name == name).first()
+    if not player:
+        player = Player(name=name)
+        db_session.add(player)
+        db_session.commit()
+        db_session.refresh(player)
+    return player
 
 
-def ensure_player(name="BizTester"):
-    db = SessionLocal()
-    try:
-        p = db.query(Player).filter(Player.name == name).first()
-        if not p:
-            p = Player(name=name)
-            db.add(p)
-            db.commit()
-            db.refresh(p)
-        return p
-    finally:
-        db.close()
-
-
-def test_create_business_and_get():
+def test_create_business_and_get(client: TestClient):
     resp = client.post(
         "/businesses/",
         json={
@@ -40,9 +32,9 @@ def test_create_business_and_get():
     assert detailed["investors"] == []
 
 
-def test_upsert_investors_and_equity_check():
-    player1 = ensure_player("Owner1")
-    player2 = ensure_player("Owner2")
+def test_upsert_investors_and_equity_check(client: TestClient, db_session):
+    player1 = ensure_player(db_session, "Owner1")
+    player2 = ensure_player(db_session, "Owner2")
     # Create business
     resp = client.post(
         "/businesses/",
@@ -71,8 +63,8 @@ def test_upsert_investors_and_equity_check():
     assert bad.status_code == 400
 
 
-def test_business_petition_creates_inbox_message():
-    player = ensure_player("Petitioner")
+def test_business_petition_creates_inbox_message(client: TestClient, db_session):
+    player = ensure_player(db_session, "Petitioner")
     petition = client.post(
         "/businesses/petitions",
         json={
@@ -93,10 +85,10 @@ def test_business_petition_creates_inbox_message():
     assert any(m["type"] == "business_petition" for m in msgs)
 
 
-def test_remove_investor_no_rebalance():
+def test_remove_investor_no_rebalance(client: TestClient, db_session):
     # setup business with two investors
-    player_a = ensure_player("RemOwnerA")
-    player_b = ensure_player("RemOwnerB")
+    player_a = ensure_player(db_session, "RemOwnerA")
+    player_b = ensure_player(db_session, "RemOwnerB")
     resp = client.post(
         "/businesses/",
         json={"name": "RemovalBiz", "description": "Test", "principle_activity": "Testing"},
@@ -121,10 +113,10 @@ def test_remove_investor_no_rebalance():
     assert round(sum(i["equity_percent"] for i in remaining), 2) == 70.0
 
 
-def test_remove_investor_with_rebalance():
-    player_a = ensure_player("RebalOwnerA")
-    player_b = ensure_player("RebalOwnerB")
-    player_c = ensure_player("RebalOwnerC")
+def test_remove_investor_with_rebalance(client: TestClient, db_session):
+    player_a = ensure_player(db_session, "RebalOwnerA")
+    player_b = ensure_player(db_session, "RebalOwnerB")
+    player_c = ensure_player(db_session, "RebalOwnerC")
     resp = client.post(
         "/businesses/",
         json={"name": "RebalanceBiz", "description": "Test", "principle_activity": "Testing"},

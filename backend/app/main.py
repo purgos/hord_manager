@@ -2,11 +2,12 @@ from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from .core.database import engine, Base
 from .utils.migrations import ensure_migrations, get_migration_status
-from .routers import health, sessions, currencies, gm, gemstones, art, real_estate, businesses, metals
+from .routers import health, sessions, currencies, gm, gemstones, art, real_estate, businesses, metals, materials, auth, data_management, data_management
 from .models import gemstone as _gemstone_models  # noqa: F401 ensure table registration
 from .models import art as _art_models  # noqa: F401 ensure table registration
 from .models import business as _business_models  # noqa: F401 ensure table registration
 from .models import metal as _metal_models  # noqa: F401 ensure table registration
+from .models import material as _material_models  # noqa: F401 ensure table registration
 
 # Alembic manages schema; create_all removed.
 
@@ -16,7 +17,12 @@ app = FastAPI(title="Hord Manager API")
 # Add CORS middleware to allow frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],  # React dev server
+    allow_origins=[
+        "http://localhost:5173", 
+        "http://127.0.0.1:5173",
+        "http://localhost:5174", 
+        "http://127.0.0.1:5174"
+    ],  # React dev server (multiple ports in case of conflicts)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -47,6 +53,9 @@ app.include_router(art.router)
 app.include_router(real_estate.router)
 app.include_router(businesses.router)
 app.include_router(metals.router)
+app.include_router(materials.router)
+app.include_router(auth.router)
+app.include_router(data_management.router)
 app.include_router(migration_router)
 
 @app.get("/")

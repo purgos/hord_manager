@@ -12,7 +12,7 @@ export const sessionService = {
   getState: async () => {
     return await api.get('/sessions/state');
   },
-  incrementSession: async () => {
+  increment: async () => {
     return await api.post('/sessions/increment');
   },
 };
@@ -20,11 +20,24 @@ export const sessionService = {
 // Currency Service
 export const currencyService = {
   async getAllCurrencies() {
-    return await api.get('/currencies/');
+    const timestamp = Date.now();
+    return await api.get(`/currencies/?_=${timestamp}`);
   },
 
   async getCurrency(name) {
     return await api.get(`/currencies/${name}`);
+  },
+
+  async createCurrency(currency) {
+    return await api.post('/currencies/', currency);
+  },
+
+  async updateCurrency(currencyId, payload) {
+    return await api.patch(`/currencies/${currencyId}`, payload);
+  },
+
+  async deleteCurrency(currencyId) {
+    return await api.delete(`/currencies/${currencyId}`);
   },
 
   async convertCurrency(amount, fromCurrency, toCurrency) {
@@ -99,10 +112,12 @@ export const metalService = {
   getSupportedMetals: async () => {
     return await api.get('/metals/supported');
   },
-  getCurrentPrices: async (useMockData = false) => {
-    return await api.get('/metals/prices/current', {
-      params: { use_mock_data: useMockData }
-    });
+  getCurrentPrices: async (useMockData = false, sessionNumber = 1) => {
+    const params = { 
+      use_mock_data: useMockData,
+      session_number: sessionNumber
+    };
+    return await api.get('/metals/prices/current', { params });
   },
   getPriceHistory: async (metalName = null, sessionNumber = null, limit = 100) => {
     return await api.get('/metals/prices/history', {
@@ -118,6 +133,78 @@ export const metalService = {
       params: { use_mock_data: useMockData }
     });
   },
+  getPriceRanges: async () => {
+    return await api.get('/metals/price-ranges');
+  },
+  updatePriceRange: async (metalName, minMultiplier, maxMultiplier) => {
+    return await api.put(`/metals/price-range/${metalName}`, null, {
+      params: {
+        min_multiplier: minMultiplier,
+        max_multiplier: maxMultiplier
+      }
+    });
+  },
+  create: async (name, unit, basePrice) => {
+    return await api.post('/metals/create', null, {
+      params: {
+        name: name,
+        unit: unit,
+        base_price: basePrice
+      }
+    });
+  },
+};
+
+// Material prices service
+export const materialService = {
+  getAvailableMaterials: async () => {
+    return await api.get('/materials/list');
+  },
+  getCurrentPrices: async (sessionNumber = 1, useMockData = true) => {
+    return await api.get('/materials/prices/current', {
+      params: { 
+        session_number: sessionNumber,
+        use_mock_data: useMockData 
+      }
+    });
+  },
+  getPriceHistory: async (materialName = null, sessionNumber = null, limit = 100) => {
+    return await api.get('/materials/prices/history', {
+      params: {
+        material_name: materialName,
+        session_number: sessionNumber,
+        limit: limit
+      }
+    });
+  },
+  triggerUpdate: async (sessionNumber = 1, useMockData = true) => {
+    return await api.post('/materials/scrape', null, {
+      params: { 
+        session_number: sessionNumber,
+        use_mock_data: useMockData 
+      }
+    });
+  },
+  getPriceRanges: async () => {
+    return await api.get('/materials/price-ranges');
+  },
+  updatePriceRange: async (materialName, minMultiplier, maxMultiplier) => {
+    return await api.put(`/materials/price-range/${materialName}`, null, {
+      params: {
+        min_multiplier: minMultiplier,
+        max_multiplier: maxMultiplier
+      }
+    });
+  },
+  create: async (name, unit, basePrice) => {
+    return await api.post('/materials/create', null, {
+      params: {
+        name: name,
+        unit: unit,
+        base_price: basePrice
+      }
+    });
+  },
 };
 
 // GM service
@@ -126,10 +213,31 @@ export const gmService = {
     return await api.get('/gm/settings');
   },
   updateSettings: async (settings) => {
-    return await api.put('/gm/settings', settings);
+    return await api.patch('/gm/settings', settings);
   },
   getInbox: async () => {
     return await api.get('/gm/inbox');
+  },
+  getInboxMessage: async (messageId) => {
+    return await api.get(`/gm/inbox/${messageId}`);
+  },
+  updateMessageStatus: async (messageId, status, responseData = null) => {
+    return await api.patch(`/gm/inbox/${messageId}/status`, null, {
+      params: { status },
+      data: responseData ? { response_data: responseData } : {}
+    });
+  },
+  createInboxMessage: async (messageType, payload, playerId = null) => {
+    return await api.post('/gm/inbox', null, {
+      params: { 
+        message_type: messageType,
+        player_id: playerId
+      },
+      data: { payload }
+    });
+  },
+  changePassword: async (passwordData) => {
+    return await api.post('/gm/change-password', passwordData);
   },
 };
 
@@ -205,3 +313,6 @@ export const realEstateService = {
     return await api.delete(`/real_estate/${id}`);
   },
 };
+
+// Data Management Service
+export { dataManagementService } from './dataManagementService';

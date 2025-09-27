@@ -9,7 +9,7 @@ Hord Manager is a local web application for hosting and managing tabletop RPG (T
 ## Key Features
 
 - Player wealth tracking (metals, gemstones, art, real estate, businesses)
-- Currency and precious metal value conversion (oz gold as base unit)
+- Currency and precious metal value conversion (oz gold as base reference, without a default Gold currency entry)
 - Web scraping of real-world metal prices for up-to-date values
 - Banking system with deposits, withdrawals, and loans
 - Business management and investment

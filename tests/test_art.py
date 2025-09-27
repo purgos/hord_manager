@@ -1,9 +1,7 @@
 from fastapi.testclient import TestClient
-from backend.app.main import app
 
-client = TestClient(app)
 
-def test_create_and_list_art():
+def test_create_and_list_art(client: TestClient):
     resp = client.post("/art/", json={"name": "Ancient Vase", "description": "Clay", "player_id": None})
     assert resp.status_code == 200, resp.text
     data = resp.json()
@@ -14,8 +12,7 @@ def test_create_and_list_art():
     names = [i["name"] for i in list_resp.json()]
     assert "Ancient Vase" in names
 
-
-def test_patch_art():
+def test_patch_art(client: TestClient):
     resp = client.post("/art/", json={"name": "Bronze Statue", "description": "Statue", "player_id": None})
     assert resp.status_code == 200, resp.text
     art = resp.json()

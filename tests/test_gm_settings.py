@@ -1,13 +1,7 @@
 from fastapi.testclient import TestClient
-from backend.app.main import app
 
 
-def get_client():
-    return TestClient(app)
-
-
-def test_get_or_create_settings():
-    client = get_client()
+def test_get_or_create_settings(client: TestClient):
     # Force a known state by patching first
     resp = client.patch("/gm/settings", json={"hide_dollar_from_players": False})
     assert resp.status_code == 200
@@ -20,10 +14,7 @@ def test_get_or_create_settings():
     data2 = resp2.json()
     assert data2["id"] == data["id"]
     assert data2["hide_dollar_from_players"] is False
-
-
-def test_patch_toggle_hide_dollar():
-    client = get_client()
+def test_patch_toggle_hide_dollar(client: TestClient):
     resp = client.patch("/gm/settings", json={"hide_dollar_from_players": True})
     assert resp.status_code == 200
     data = resp.json()

@@ -1,10 +1,11 @@
-from typing import List
+from typing import List, Optional
 import random
 import logging
 from datetime import datetime
 from sqlalchemy.orm import Session
 
 from ..models.metal import MetalPriceHistory
+from ..models.material import MaterialPriceHistory
 from ..models.session import GlobalState
 
 logger = logging.getLogger(__name__)
@@ -53,13 +54,27 @@ SUPPORTED_GEMSTONES = {
     "Tiger's Eye": {"unit": "carat", "min_price": 2.0, "max_price": 25.0},
 }
 
-def scrape_metal_prices(use_mock_data: bool = False) -> List[dict]:
-    """Generate random metal prices within specified ranges."""
-    logger.info("Generating random metal price data")
+def scrape_metal_prices(use_mock_data: bool = False, session_number: int = 1) -> List[dict]:
+    """Generate metal prices with session-based progression."""
+    logger.info(f"Generating metal price data for session {session_number}")
     results = []
     
+    # Use session number as seed for consistent but varying prices
+    random.seed(session_number * 17)  # Different seed than materials
+    
     for metal_name, config in SUPPORTED_METALS.items():
-        price = random.uniform(config["min_price"], config["max_price"])
+        # Add session-based growth (1% per session for metals, less than materials)
+        session_modifier = 1 + (session_number - 1) * 0.01
+        
+        # Add some variability (±15% from middle of range)
+        base_price = (config["min_price"] + config["max_price"]) / 2
+        variance = random.uniform(0.85, 1.15)
+        
+        price = base_price * session_modifier * variance
+        
+        # Ensure price stays within reasonable bounds
+        price = max(config["min_price"] * 0.5, min(config["max_price"] * 2.0, price))
+        
         results.append({
             "metal_name": metal_name,
             "unit": config["unit"],
@@ -158,10 +173,27 @@ def store_metal_prices_in_db(metal_prices: List[dict], db: Session) -> int:
     
     return stored_count
 
+
+def fetch_latest_metal_prices(db: Session, session_number: Optional[int] = None) -> List[MetalPriceHistory]:
+    """Return the most recent stored metal prices for each metal."""
+    query = db.query(MetalPriceHistory)
+    if session_number is not None:
+        query = query.filter(MetalPriceHistory.session_number == session_number)
+
+    records = query.order_by(MetalPriceHistory.created_at.desc()).all()
+
+    latest: dict[str, MetalPriceHistory] = {}
+    for record in records:
+        if record.metal_name not in latest:
+            latest[record.metal_name] = record
+
+    return list(latest.values())
+
 def scrape_and_store_metal_prices(db: Session, use_mock_data: bool = False) -> dict:
-    """Generate random metal prices and store them in the database."""
+    """Generate session-based metal prices and store them in the database."""
     try:
-        metal_prices = scrape_metal_prices(use_mock_data=use_mock_data)
+        session_number = _get_current_session_number(db)
+        metal_prices = scrape_metal_prices(use_mock_data=use_mock_data, session_number=session_number)
         
         if not metal_prices:
             return {
@@ -186,3 +218,49 @@ def scrape_and_store_metal_prices(db: Session, use_mock_data: bool = False) -> d
             "error": str(e),
             "prices_stored": 0
         }
+
+
+def store_material_prices_in_db(material_prices: List[dict], db: Session, session_number: int) -> int:
+    """Persist generated material prices for a given session."""
+    stored_count = 0
+
+    for price_data in material_prices:
+        try:
+            material_price = MaterialPriceHistory(
+                material_name=price_data["material_name"],
+                unit=price_data["unit"],
+                price_per_unit_usd=price_data["price_per_unit_usd"],
+                price_per_oz_gold=price_data["price_per_oz_gold"],
+                session_number=session_number,
+                created_at=datetime.utcnow(),
+            )
+            db.add(material_price)
+            stored_count += 1
+        except Exception as exc:
+            logger.error("Error storing material price for %s: %s", price_data.get("material_name"), exc)
+            continue
+
+    try:
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+        logger.error("Error committing material prices to database: %s", exc)
+        raise
+
+    return stored_count
+
+
+def fetch_latest_material_prices(db: Session, session_number: Optional[int] = None) -> List[MaterialPriceHistory]:
+    """Return the most recent stored material prices for each material."""
+    query = db.query(MaterialPriceHistory)
+    if session_number is not None:
+        query = query.filter(MaterialPriceHistory.session_number == session_number)
+
+    records = query.order_by(MaterialPriceHistory.created_at.desc()).all()
+
+    latest: dict[str, MaterialPriceHistory] = {}
+    for record in records:
+        if record.material_name not in latest:
+            latest[record.material_name] = record
+
+    return list(latest.values())

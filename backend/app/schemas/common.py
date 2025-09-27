@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 from typing import Optional, List
 from datetime import datetime
 
@@ -22,7 +22,18 @@ class CurrencyDenominationUpdate(BaseModel):
 
 class CurrencyBase(BaseModel):
     name: str
-    base_unit_value_oz_gold: float = 0.0
+    peg_type: str = "CURRENCY"  # CURRENCY, METAL, MATERIAL
+    peg_target: str = "USD"     # name of currency/metal/material to peg to
+    base_unit_value: float = 1.0  # value in terms of peg_target
+    base_unit_value_oz_gold: float | None = None
+
+    @model_validator(mode="after")
+    def _sync_base_unit_value(self):
+        if self.base_unit_value_oz_gold is not None:
+            self.base_unit_value = self.base_unit_value_oz_gold
+        else:
+            self.base_unit_value_oz_gold = self.base_unit_value
+        return self
 
 class CurrencyCreate(CurrencyBase):
     denominations: list[CurrencyDenominationCreate] = []
@@ -34,6 +45,9 @@ class CurrencyRead(CurrencyBase):
 
 
 class CurrencyUpdate(BaseModel):
+    peg_type: str | None = None
+    peg_target: str | None = None
+    base_unit_value: float | None = None
     base_unit_value_oz_gold: float | None = None
     denominations_add_or_update: list[CurrencyDenominationUpdate] = []
     denomination_ids_remove: list[int] = []
@@ -70,6 +84,7 @@ class InboxMessageRead(BaseModel):
     created_at: datetime
     updated_at: datetime
     player_id: int | None
+    player_username: str | None = None
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -215,3 +230,36 @@ class BusinessPetitionCreate(BaseModel):
     description: str = ""
     principle_activity: str = ""
     initial_investment_oz_gold: float = 0.0
+
+
+class PlayerRegistrationCreate(BaseModel):
+    username: str
+    password: str
+    confirm_password: str
+
+
+class PlayerRegistrationRead(BaseModel):
+    id: int
+    name: str
+    is_approved: bool
+    created_at: datetime
+    approved_at: datetime | None = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PlayerLoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class PlayerLoginResponse(BaseModel):
+    success: bool
+    message: str
+    player_id: int | None = None
+    username: str | None = None
+
+
+class GMPasswordChangeRequest(BaseModel):
+    current_password: str
+    new_password: str
+    confirm_password: str

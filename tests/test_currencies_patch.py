@@ -1,11 +1,9 @@
-from fastapi.testclient import TestClient
-from backend.app.main import app
 import uuid
 
-client = TestClient(app)
+from fastapi.testclient import TestClient
 
 
-def make_currency(name_prefix="PatchCurr", base_unit=0.01, denominations=None):
+def make_currency(client: TestClient, name_prefix="PatchCurr", base_unit=0.01, denominations=None):
     if denominations is None:
         denominations = [
             {"name": "Small", "value_in_base_units": 1},
@@ -24,8 +22,8 @@ def make_currency(name_prefix="PatchCurr", base_unit=0.01, denominations=None):
     return resp.json()
 
 
-def test_patch_add_denomination():
-    curr = make_currency()
+def test_patch_add_denomination(client: TestClient):
+    curr = make_currency(client)
     cid = curr["id"]
     patch_payload = {
         "denominations_add_or_update": [
@@ -37,10 +35,8 @@ def test_patch_add_denomination():
     data = resp.json()
     names = {d["name"] for d in data["denominations"]}
     assert "NewDenom" in names
-
-
-def test_patch_update_denomination():
-    curr = make_currency()
+def test_patch_update_denomination(client: TestClient):
+    curr = make_currency(client)
     cid = curr["id"]
     # Pick one denom to update
     target = curr["denominations"][0]
@@ -55,10 +51,8 @@ def test_patch_update_denomination():
     updated = next(d for d in data["denominations"] if d["id"] == target["id"])
     assert updated["name"] == "Renamed"
     assert updated["value_in_base_units"] == 2
-
-
-def test_patch_remove_denomination():
-    curr = make_currency()
+def test_patch_remove_denomination(client: TestClient):
+    curr = make_currency(client)
     cid = curr["id"]
     remove_id = curr["denominations"][0]["id"]
     patch_payload = {"denomination_ids_remove": [remove_id]}
@@ -67,10 +61,8 @@ def test_patch_remove_denomination():
     data = resp.json()
     ids = {d["id"] for d in data["denominations"]}
     assert remove_id not in ids
-
-
-def test_patch_combined_operations():
-    curr = make_currency()
+def test_patch_combined_operations(client: TestClient):
+    curr = make_currency(client)
     cid = curr["id"]
     # We will: update base unit, update one denom, remove another, add new
     to_update = curr["denominations"][0]
@@ -93,10 +85,8 @@ def test_patch_combined_operations():
     assert updated["value_in_base_units"] == 3
     names = {d["name"] for d in data["denominations"]}
     assert "Added" in names
-
-
-def test_patch_update_nonexistent_denomination_error():
-    curr = make_currency()
+def test_patch_update_nonexistent_denomination_error(client: TestClient):
+    curr = make_currency(client)
     cid = curr["id"]
     nonexistent_id = 999999  # unlikely to exist
     patch_payload = {

@@ -94,21 +94,21 @@
 
 ## GM Screen (Password Protected)
 
-- [ ] Add/edit currencies and denominations
+- [ ] Add/edit currencies and denominations *(UI placeholder created)*
 - [ ] Set currency values
-- [x] Toggle visibility of dollar currency to players *(settings flag + endpoint; player filtering still pending)*
-- [ ] Set exchange fee, interest rate, growth factor
-- [ ] Set loan terms (interest, length, down payment, payment calc)
-- [ ] Add/edit gemstones and values
+- [x] Toggle visibility of dollar currency to players *(Complete: settings flag + endpoint + UI)*
+- [x] Set exchange fee, interest rate, growth factor *(Complete: UI and backend integration)*
+- [x] Set loan terms (interest, length, down payment, payment calc) *(Complete: Custom interest rates, terms, and payment calculations for each loan)*
+- [ ] Add/edit gemstones and values *(UI placeholder created)*
 - [ ] View all player net worths and breakdowns (pie/line graphs)
 - [ ] View total player net worth and graphs
-- [ ] Session counter (increment, update all)
-- [ ] Reset/delete all data (with confirm)
-- [ ] Inbox (appraisals, business, investments, loans)
-  - [ ] Appraisal requests (approve, set value)
-  - [ ] Business approval (approve/disapprove, set income)
-  - [ ] Investment approval (approve/disapprove, update income)
-  - [ ] Loan petitions (approve/disapprove, set terms)
+- [x] Session counter (increment, update all) *(Complete: UI with session increment and price updates)*
+- [ ] Reset/delete all data (with confirm) *(UI structure created, backend implementation pending)*
+- [x] Inbox (appraisals, business, investments, loans) *(Complete: Full inbox management system)*
+  - [x] Appraisal requests (approve, set value) *(Complete: UI with value input for approvals)*
+  - [x] Business approval (approve/disapprove, set income) *(Complete: UI with income setting)*
+  - [x] Investment approval (approve/disapprove, update income) *(Complete: approve/reject functionality)*
+  - [x] Loan petitions (approve/disapprove, set terms) *(Complete: approve/reject with response data)*
 
 ## Packaging & Deployment
 

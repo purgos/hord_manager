@@ -1,9 +1,12 @@
 from enum import Enum
 from sqlalchemy import Integer, String, Boolean, DateTime, ForeignKey, func, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import TYPE_CHECKING
 
 from ..core.database import Base
-from .player import Player  # noqa: F401  Ensures players table registered for FK resolution
+
+if TYPE_CHECKING:
+    from .player import Player
 
 
 class InboxMessageType(str, Enum):
@@ -11,6 +14,7 @@ class InboxMessageType(str, Enum):
     BUSINESS = "business"
     INVESTMENT = "investment"
     LOAN = "loan"
+    ACCOUNT_REGISTRATION = "account_registration"
 
 
 class InboxMessageStatus(str, Enum):
@@ -46,5 +50,5 @@ class InboxMessage(Base):
     updated_at: Mapped[str] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     player_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("players.id", ondelete="SET NULL"), nullable=True)
 
-    # Lazy relationship import avoidance (optional relationship back to Player)
-    # player: Mapped["Player"] = relationship("Player")  # Uncomment later when needed
+    # Relationship to Player
+    player: Mapped["Player"] = relationship("Player")

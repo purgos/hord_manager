@@ -1,9 +1,9 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from ..core.database import get_db
-from ..models.currency import Currency, CurrencyDenomination
+from ..models.currency import Currency, CurrencyDenomination, PegType
 from ..schemas.common import (
     CurrencyCreate,
     CurrencyRead,
@@ -36,6 +36,73 @@ class ValueDisplayRequest(BaseModel):
 
 router = APIRouter(prefix="/currencies", tags=["currencies"]) 
 
+
+def _coerce_peg_type(raw: str | PegType | None) -> PegType:
+    """Normalize incoming peg type values, accepting enum members, names, or values."""
+    if isinstance(raw, PegType):
+        return raw
+    if raw is None:
+        raise HTTPException(status_code=400, detail="peg_type is required")
+
+    if not isinstance(raw, str):
+        raise HTTPException(status_code=400, detail="peg_type must be a string")
+
+    value = raw.strip()
+    if not value:
+        raise HTTPException(status_code=400, detail="peg_type cannot be empty")
+
+    # Try enum name lookup (uppercase)
+    try:
+        return PegType[value.upper()]
+    except KeyError:
+        pass
+
+    # Fall back to enum value lookup (lowercase in models)
+    try:
+        return PegType(value.lower())
+    except ValueError as exc:  # pragma: no cover - defensive branch
+        raise HTTPException(status_code=400, detail=f"Invalid peg_type '{raw}'") from exc
+
+
+def _ensure_base_currencies(db: Session) -> None:
+    """Ensure only USD is automatically managed as the base currency."""
+    changed = False
+
+    usd = db.query(Currency).filter(Currency.name == "USD").first()
+    if usd is None:
+        usd = Currency(name="USD", peg_type=PegType.CURRENCY, peg_target="USD", base_unit_value=1.0)
+        db.add(usd)
+        db.flush()
+        db.add_all(
+            [
+                CurrencyDenomination(currency_id=usd.id, name="Dollar", value_in_base_units=1.0),
+                CurrencyDenomination(currency_id=usd.id, name="Cent", value_in_base_units=0.01),
+            ]
+        )
+        changed = True
+    else:
+        if usd.peg_type != PegType.CURRENCY or usd.peg_target != "USD" or usd.base_unit_value != 1.0:
+            usd.peg_type = PegType.CURRENCY
+            usd.peg_target = "USD"
+            usd.base_unit_value = 1.0
+            changed = True
+        if not usd.denominations:
+            db.add_all(
+                [
+                    CurrencyDenomination(currency_id=usd.id, name="Dollar", value_in_base_units=1.0),
+                    CurrencyDenomination(currency_id=usd.id, name="Cent", value_in_base_units=0.01),
+                ]
+            )
+            changed = True
+
+    gold = db.query(Currency).filter(Currency.name == "Gold").first()
+    if gold is not None:
+        db.delete(gold)
+        changed = True
+
+    if changed:
+        db.commit()
+
 @router.post("/", response_model=CurrencyRead)
 def create_currency(
     payload: CurrencyCreate,
@@ -45,15 +112,17 @@ def create_currency(
     """Create a currency.
 
     Upsert semantics when `upsert=true`:
-    - Updates base_unit_value_oz_gold.
+    - Updates peg_type, peg_target, and base_unit_value.
     - Replaces existing denominations with those provided (full replacement, not merge).
     """
     existing = db.query(Currency).filter(Currency.name == payload.name).first()
     if existing:
         if not upsert:
             raise HTTPException(status_code=400, detail="Currency already exists")
-        # Update value
-        existing.base_unit_value_oz_gold = payload.base_unit_value_oz_gold
+        # Update values
+        existing.peg_type = _coerce_peg_type(payload.peg_type)
+        existing.peg_target = payload.peg_target
+        existing.base_unit_value = payload.base_unit_value
         # Replace denominations
         for den in list(existing.denominations):
             db.delete(den)
@@ -70,7 +139,12 @@ def create_currency(
         db.refresh(existing)
         target = existing
     else:
-        currency = Currency(name=payload.name, base_unit_value_oz_gold=payload.base_unit_value_oz_gold)
+        currency = Currency(
+            name=payload.name,
+            peg_type=_coerce_peg_type(payload.peg_type),
+            peg_target=payload.peg_target,
+            base_unit_value=payload.base_unit_value,
+        )
         db.add(currency)
         db.flush()
         for d in payload.denominations:
@@ -82,7 +156,9 @@ def create_currency(
     return CurrencyRead(
         id=target.id,
         name=target.name,
-        base_unit_value_oz_gold=target.base_unit_value_oz_gold,
+        peg_type=target.peg_type.value,
+        peg_target=target.peg_target,
+        base_unit_value=target.base_unit_value,
         denominations=[
             CurrencyDenominationRead(id=den.id, name=den.name, value_in_base_units=den.value_in_base_units)
             for den in target.denominations
@@ -91,12 +167,15 @@ def create_currency(
 
 @router.get("/", response_model=list[CurrencyRead])
 def list_currencies(db: Session = Depends(get_db)):
+    _ensure_base_currencies(db)
     currencies = db.query(Currency).all()
     return [
         CurrencyRead(
             id=c.id,
             name=c.name,
-            base_unit_value_oz_gold=c.base_unit_value_oz_gold,
+            peg_type=c.peg_type.value,
+            peg_target=c.peg_target,
+            base_unit_value=c.base_unit_value,
             denominations=[
                 CurrencyDenominationRead(id=den.id, name=den.name, value_in_base_units=den.value_in_base_units)
                 for den in c.denominations
@@ -110,7 +189,9 @@ def list_currencies(db: Session = Depends(get_db)):
 def patch_currency(currency_id: int, payload: CurrencyUpdate, db: Session = Depends(get_db)):
     """Partially update a currency.
 
-    - base_unit_value_oz_gold: if provided, update.
+    - peg_type: if provided, update the pegging type (CURRENCY, METAL, MATERIAL)
+    - peg_target: if provided, update the target (currency/metal/material name)
+    - base_unit_value: if provided, update the value in terms of peg_target
     - denominations_add_or_update: list of denomination objects:
         * if id provided -> update existing fields (name/value) if not None
         * if id missing -> create new denomination
@@ -121,8 +202,15 @@ def patch_currency(currency_id: int, payload: CurrencyUpdate, db: Session = Depe
         raise HTTPException(status_code=404, detail="Currency not found")
 
     data = payload.model_dump(exclude_unset=True)
-    if "base_unit_value_oz_gold" in data and data["base_unit_value_oz_gold"] is not None:
-        currency.base_unit_value_oz_gold = data["base_unit_value_oz_gold"]
+    if "peg_type" in data and data["peg_type"] is not None:
+        currency.peg_type = _coerce_peg_type(data["peg_type"])
+    if "peg_target" in data and data["peg_target"] is not None:
+        currency.peg_target = data["peg_target"]
+    base_unit = data.get("base_unit_value")
+    if base_unit is None and data.get("base_unit_value_oz_gold") is not None:
+        base_unit = data["base_unit_value_oz_gold"]
+    if base_unit is not None:
+        currency.base_unit_value = base_unit
 
     # Remove denominations
     for den_id in data.get("denomination_ids_remove", []):
@@ -157,12 +245,27 @@ def patch_currency(currency_id: int, payload: CurrencyUpdate, db: Session = Depe
     return CurrencyRead(
         id=currency.id,
         name=currency.name,
-        base_unit_value_oz_gold=currency.base_unit_value_oz_gold,
+        peg_type=currency.peg_type.value,
+        peg_target=currency.peg_target,
+        base_unit_value=currency.base_unit_value,
         denominations=[
             CurrencyDenominationRead(id=den.id, name=den.name, value_in_base_units=den.value_in_base_units)
             for den in currency.denominations
         ],
     )
+
+
+@router.delete("/{currency_id}", status_code=204)
+def delete_currency(currency_id: int, db: Session = Depends(get_db)):
+    currency = db.query(Currency).filter(Currency.id == currency_id).first()
+    if currency is None:
+        raise HTTPException(status_code=404, detail="Currency not found")
+    if currency.name == "USD":
+        raise HTTPException(status_code=400, detail="Cannot delete the USD base currency")
+
+    db.delete(currency)
+    db.commit()
+    return Response(status_code=204)
 
 
 # === CONVERSION ENDPOINTS ===
